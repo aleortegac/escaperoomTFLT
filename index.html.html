@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respect & Inclusion Quest: Hangman & Word Rescue</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#6D28D9',
+                            indigo: '#4F46E5',
+                            pink: '#DB2777',
+                            teal: '#0D9488',
+                            amber: '#D97706',
+                            emerald: '#059669',
+                            rose: '#E11D48'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .letter-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-puzzle-piece text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+                        Respect & Inclusion Hangman
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Build the Bridge of Inclusion with Modal Verbs</p>
+                </div>
+            </div>
+            
+            <div id="gameStatsHeader" class="hidden flex items-center gap-3 sm:gap-6 text-sm font-semibold">
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-amber-400"></i>
+                    <span id="timerDisplay" class="text-amber-300 font-mono">00:00</span>
+                </div>
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-yellow-400"></i>
+                    <span id="scoreDisplay" class="text-yellow-300 font-mono">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+
+        <!-- START SCREEN -->
+        <div id="startScreen" class="max-w-xl w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 card-shadow relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl"></div>
+
+            <div class="text-center mb-6 relative">
+                <span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/30 mb-3">
+                    Educational Word Rescue & Ethics Game
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Welcome, Inclusion Hero!</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Guess the hidden target words letter by letter to build the <span class="text-purple-300 font-semibold">Community Bridge</span>. Master modal verbs (<span class="text-pink-300 font-semibold">should, must, mustn't, ought to, don't have to, can't, allow</span>) and key DEI concepts!
+                </p>
+            </div>
+
+            <form id="startForm" onsubmit="startGame(event)" class="space-y-4">
+                <div>
+                    <label for="playerName" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Enter Your Player Name</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-astronaut absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="playerName" required placeholder="e.g. Taylor Swift" 
+                            class="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60 text-xs text-slate-300 space-y-2">
+                    <p class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i> How to Play:
+                    </p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400">
+                        <li>Read the DEI sentence and fill in the missing word or modal verb.</li>
+                        <li>Click on letters or use your keyboard to guess letter-by-letter.</li>
+                        <li>Every wrong guess removes a piece of the Bridge! You have 6 mistakes allowed per word.</li>
+                        <li>Use the optional Grammar and DEI hints if you get stuck.</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 transform hover:-translate-y-0.5 transition active:translate-y-0 flex items-center justify-center gap-2 text-base">
+                    <span>Start Word Rescue</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="gameScreen" class="hidden max-w-5xl w-full flex flex-col gap-6">
+            
+            <!-- Round Bar & Category -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+                <div class="flex items-center gap-3">
+                    <span id="wordProgressBadge" class="px-3 py-1 rounded-lg bg-purple-900/60 text-purple-300 font-extrabold text-sm border border-purple-500/40">
+                        Word 1 / 6
+                    </span>
+                    <div>
+                        <h2 id="categoryTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-pink-400"></i> Category: Anti-Bullying
+                        </h2>
+                        <p class="text-xs text-slate-400">Complete the missing word in the sentence below.</p>
+                    </div>
+                </div>
+
+                <!-- Mistakes / Health Counter -->
+                <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 font-bold uppercase">Bridge Integrity:</span>
+                    <div id="heartsContainer" class="flex gap-1 text-rose-500">
+                        <!-- Dynamic Hearts -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Arena: SVG Visual + Word Guessing -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left Visual Area: Bridge SVG (Hangman replacement) -->
+                <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center shadow-lg relative min-h-[280px]">
+                    <span class="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Community Bridge Visual</span>
+                    
+                    <svg id="bridgeSvg" class="w-full h-56 max-w-[280px]" viewBox="0 0 300 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Background Sky & Sun -->
+                        <rect width="300" height="220" rx="12" fill="#0F172A"/>
+                        <circle cx="250" cy="40" r="18" fill="#F59E0B" opacity="0.8"/>
+                        
+                        <!-- Water/Chasm -->
+                        <path d="M0 180 Q 75 175, 150 180 T 300 180 L 300 220 L 0 220 Z" fill="#1E293B"/>
+                        <path d="M0 195 Q 75 190, 150 195 T 300 195 L 300 220 L 0 220 Z" fill="#0284C7" opacity="0.4"/>
+
+                        <!-- Left Cliff -->
+                        <path d="M0 130 L 60 130 L 70 220 L 0 220 Z" fill="#334155"/>
+                        <!-- Right Cliff -->
+                        <path d="M230 130 L 300 130 L 300 220 L 240 220 Z" fill="#334155"/>
+
+                        <!-- BRIDGE PIECES (6 Total Mistakes) -->
+                        <!-- Piece 1: Left Pillar -->
+                        <rect id="bridge_1" x="50" y="110" width="12" height="70" rx="2" fill="#A855F7"/>
+                        
+                        <!-- Piece 2: Right Pillar -->
+                        <rect id="bridge_2" x="238" y="110" width="12" height="70" rx="2" fill="#A855F7"/>
+                        
+                        <!-- Piece 3: Main Deck Span -->
+                        <rect id="bridge_3" x="50" y="110" width="200" height="10" rx="3" fill="#EC4899"/>
+                        
+                        <!-- Piece 4: Left Support Arch -->
+                        <path id="bridge_4" d="M60 120 Q 150 160 240 120" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" fill="none"/>
+                        
+                        <!-- Piece 5: Suspension Cables -->
+                        <g id="bridge_5" stroke="#F59E0B" stroke-width="2" stroke-dasharray="3 3">
+                            <line x1="90" y1="110" x2="90" y2="135"/>
+                            <line x1="130" y1="110" x2="130" y2="145"/>
+                            <line x1="170" y1="110" x2="170" y2="145"/>
+                            <line x1="210" y1="110" x2="210" y2="135"/>
+                        </g>
+
+                        <!-- Piece 6: People Crossing / Inclusion Banner -->
+                        <g id="bridge_6">
+                            <!-- Person 1 -->
+                            <circle cx="135" cy="98" r="5" fill="#34D399"/>
+                            <path d="M135 103 L 135 110 M131 106 L 139 106" stroke="#34D399" stroke-width="2"/>
+                            <!-- Person 2 -->
+                            <circle cx="165" cy="98" r="5" fill="#F472B6"/>
+                            <path d="M165 103 L 165 110 M161 106 L 169 106" stroke="#F472B6" stroke-width="2"/>
+                        </g>
+                    </svg>
+
+                    <p id="bridgeStatusText" class="text-xs text-center text-slate-400 mt-2">
+                        Keep guessing letters to maintain the bridge!
+                    </p>
+                </div>
+
+                <!-- Right Interaction Area: Sentence, Word Blanks & Keyboard -->
+                <div class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-5">
+                    
+                    <!-- Sentence Context Display -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block mb-1">
+                            Sentence Context:
+                        </span>
+                        <p id="sentenceContext" class="text-base text-slate-200 leading-relaxed font-medium">
+                            <!-- Sentence with missing word -->
+                        </p>
+                    </div>
+
+                    <!-- Hidden Word Slots -->
+                    <div class="text-center py-2">
+                        <span class="text-xs uppercase text-slate-400 font-semibold block mb-3">Guess the Missing Word:</span>
+                        <div id="wordDisplay" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                            <!-- Blank letter boxes -->
+                        </div>
+                    </div>
+
+                    <!-- Hint Accordions / Buttons -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button onclick="toggleHint('grammar')" class="py-2 px-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-indigo-300 font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-book text-indigo-400 mr-1.5"></i> Grammar Hint</span>
+                            <i id="grammarHintIcon" class="fa-solid fa-chevron-down text-slate-500"></i>
+                        </button>
+                        <button onclick="toggleHint('dei')" class="py-2 px-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-pink-300 font-semibold flex items-center justify-between transition">
+                            <span><i class="fa-solid fa-heart text-pink-400 mr-1.5"></i> DEI Context Hint</span>
+                            <i id="deiHintIcon" class="fa-solid fa-chevron-down text-slate-500"></i>
+                        </button>
+                    </div>
+
+                    <!-- Hint Display Box -->
+                    <div id="hintBox" class="hidden p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl text-xs text-slate-300">
+                        <p id="hintText"></p>
+                    </div>
+
+                    <!-- On-Screen Keyboard -->
+                    <div>
+                        <div id="keyboard" class="grid grid-cols-7 sm:grid-cols-9 gap-1.5 sm:gap-2">
+                            <!-- Letters A-Z populated JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- SUMMARY / CERTIFICATE SCREEN -->
+        <div id="summaryScreen" class="hidden max-w-2xl w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-10 card-shadow relative overflow-hidden text-center">
+            <div class="absolute -top-16 -right-16 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+            <div class="inline-flex p-4 bg-gradient-to-tr from-amber-500/20 to-yellow-500/20 rounded-full border border-amber-500/30 text-amber-400 mb-4">
+                <i class="fa-solid fa-award text-4xl"></i>
+            </div>
+
+            <p class="text-xs font-bold uppercase tracking-widest text-amber-400">Certificate of Educational Achievement</p>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1 mb-2">Inclusion Word Master</h2>
+            <p class="text-slate-300 text-sm max-w-md mx-auto mb-6">
+                This certificate honors <span id="certPlayerName" class="font-extrabold text-purple-300 underline">Player</span> for successfully constructing the Respect Bridge and demonstrating proficiency in Modal Verbs and Anti-Bullying principles!
+            </p>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/80 p-4 rounded-xl border border-slate-700 mb-6 text-left sm:text-center">
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Total Score</span>
+                    <span id="finalScore" class="text-xl sm:text-2xl font-black text-yellow-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Time Elapsed</span>
+                    <span id="finalTime" class="text-xl sm:text-2xl font-black text-amber-300">00:00</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Accuracy</span>
+                    <span id="finalAccuracy" class="text-xl sm:text-2xl font-black text-emerald-400">100%</span>
+                </div>
+            </div>
+
+            <!-- Earned Badges -->
+            <div class="mb-8">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Badges Earned</h4>
+                <div id="badgesContainer" class="flex flex-wrap justify-center gap-3">
+                    <!-- Badges injected JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="restartGame()" class="py-3 px-6 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Play Again
+                </button>
+                <button onclick="printCertificate()" class="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Certificate
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- EDUCATIONAL EXPLANATION MODAL -->
+    <div id="feedbackModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div id="feedbackCard" class="max-w-md w-full bg-slate-800 border rounded-2xl p-6 shadow-2xl transform transition-all scale-95 opacity-0">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="feedbackIconContainer" class="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold">
+                    <!-- Icon JS -->
+                </div>
+                <div>
+                    <h3 id="feedbackTitle" class="text-lg font-extrabold text-white">Word Saved!</h3>
+                    <p id="feedbackSubtitle" class="text-xs text-slate-400">Educational Breakdown</p>
+                </div>
+            </div>
+
+            <div id="feedbackContent" class="space-y-3 my-4 text-sm text-slate-300 bg-slate-900/60 p-4 rounded-xl border border-slate-700/80">
+                <!-- Injected explanation -->
+            </div>
+
+            <button onclick="closeFeedbackModal()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition">
+                Next Word <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 text-center py-4 text-xs text-slate-500">
+        <p>Educational Hangman Game • ESL/EFL Modal Verbs & DEI Awareness (Diversity, Equity, Inclusion)</p>
+    </footer>
+
+    <script>
+        /* ===================================================================
+           GAME DATASET (DEI & MODAL VERBS)
+           =================================================================== */
+        const wordList = [
+            {
+                target: "MUSTN'T",
+                category: "Anti-Bullying & Rules",
+                sentence: "You ___ insult or intimidate anyone in person or online.",
+                grammarHint: "Modal verb used for strict prohibition or rules.",
+                deiHint: "Cyberbullying or verbal harassment is never acceptable.",
+                explanation: "<b>'Mustn't'</b> expresses a strong rule or prohibition. In safe communities, harassment is strictly forbidden.",
+                deiTip: "Respecting boundaries ensures that everyone feels psychologically safe."
+            },
+            {
+                target: "RESPECT",
+                category: "Core DEI Values",
+                sentence: "We should show ___ for all cultural traditions and backgrounds.",
+                grammarHint: "Noun following a modal verb phrase ('show respect').",
+                deiHint: "Valuing other people's identities and feelings.",
+                explanation: "<b>'Respect'</b> is the foundation of inclusive communication.",
+                deiTip: "Showing respect means listening openly without prejudice."
+            },
+            {
+                target: "SHOULD",
+                category: "Kindness & Empathy",
+                sentence: "We ___ invite classmates who are sitting alone to join our lunch table.",
+                grammarHint: "Modal verb used to offer good advice or recommendations.",
+                deiHint: "A proactive act of kindness to prevent isolation.",
+                explanation: "<b>'Should'</b> indicates a recommended, positive course of action.",
+                deiTip: "Small acts of inclusion reduce feelings of loneliness and peer exclusion."
+            },
+            {
+                target: "EQUITY",
+                category: "Diversity & Inclusion",
+                sentence: "___ means giving everyone the specific tools they need to succeed.",
+                grammarHint: "Key noun describing fairness rather than identical treatment.",
+                deiHint: "Providing tailored support so everyone has equal opportunity.",
+                explanation: "<b>'Equity'</b> ensures individuals receive support relative to their unique needs.",
+                deiTip: "Equality gives everyone the same shoe; equity gives everyone a shoe that fits!"
+            },
+            {
+                target: "ALLOW",
+                category: "Rights & Accessibility",
+                sentence: "Accessible ramps ___ wheelchair users to enter the building independently.",
+                grammarHint: "Verb meaning to permit or make something possible.",
+                deiHint: "Removing physical barriers for people with disabilities.",
+                explanation: "<b>'Allow'</b> signifies granting permission or enabling full participation.",
+                deiTip: "Universal design benefits the entire community, not just individuals with disabilities."
+            },
+            {
+                target: "OUGHT TO",
+                category: "Moral Responsibilities",
+                sentence: "We ___ stand up for victims of discrimination whenever we see it.",
+                grammarHint: "Two-word modal phrase meaning 'should' (moral duty).",
+                deiHint: "An ethical obligation to be an active upstander.",
+                explanation: "<b>'Ought to'</b> carries a strong tone of moral duty and social responsibility.",
+                deiTip: "Upstanders use their voice to protect others from unfair treatment."
+            }
+        ];
+
+        /* ===================================================================
+           STATE VARIABLES
+           =================================================================== */
+        let playerName = "";
+        let currentWordIndex = 0;
+        let score = 0;
+        let mistakesLeft = 6;
+        let guessedLetters = new Set();
+        let secondsElapsed = 0;
+        let timerInterval = null;
+        let activeHintType = null;
+        let totalGuesses = 0;
+        let correctGuesses = 0;
+
+        /* ===================================================================
+           WEB AUDIO API SYNTHESIZER
+           =================================================================== */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(140, now + 0.1);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.1);
+                    osc.frequency.setValueAtTime(659.25, now + 0.2);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Handling Input, Keyboard Events, and Game Engine...
+           =================================================================== */
+        function startGame(e) {
+            e.preventDefault();
+            initAudio();
+
+            const input = document.getElementById('playerName').value.trim();
+            playerName = input || "Inclusion Hero";
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.remove('hidden');
+
+            score = 0;
+            currentWordIndex = 0;
+            secondsElapsed = 0;
+            totalGuesses = 0;
+            correctGuesses = 0;
+
+            updateScoreDisplay();
+            startTimer();
+            renderKeyboard();
+            loadWord(currentWordIndex);
+
+            // Listen to physical keyboard events
+            window.addEventListener('keydown', handlePhysicalKeyboard);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('scoreDisplay').innerText = score;
+        }
+
+        function renderHearts() {
+            const container = document.getElementById('heartsContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                if (i < mistakesLeft) {
+                    container.innerHTML += '<i class="fa-solid fa-heart animate-pop text-rose-500"></i>';
+                } else {
+                    container.innerHTML += '<i class="fa-regular fa-heart text-slate-600"></i>';
+                }
+            }
+        }
+
+        function renderKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ'".split('');
+
+            letters.forEach(char => {
+                const btn = document.createElement('button');
+                btn.id = `key-${char === "'" ? 'APOS' : char}`;
+                btn.className = "letter-btn py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-slate-100 text-sm sm:text-base border border-slate-600 shadow transition active:scale-95";
+                btn.innerText = char;
+                btn.onclick = () => handleGuess(char);
+                keyboard.appendChild(btn);
+            });
+        }
+
+        function updateBridgeVisual() {
+            // Bridge SVG has 6 pieces corresponding to remaining lives
+            // mistakesLeft: 6 -> All visible, 0 -> All broken/hidden
+            const mistakeCount = 6 - mistakesLeft;
+            
+            for (let i = 1; i <= 6; i++) {
+                const piece = document.getElementById(`bridge_${i}`);
+                if (piece) {
+                    if (i > (6 - mistakeCount)) {
+                        piece.style.opacity = '0.15';
+                        piece.style.filter = 'grayscale(100%)';
+                    } else {
+                        piece.style.opacity = '1';
+                        piece.style.filter = 'none';
+                    }
+                }
+            }
+
+            const statusText = document.getElementById('bridgeStatusText');
+            if (mistakesLeft === 6) {
+                statusText.innerText = "Bridge intact! Safe crossing.";
+                statusText.className = "text-xs text-center text-emerald-400 mt-2 font-semibold";
+            } else if (mistakesLeft > 2) {
+                statusText.innerText = `Careful! Bridge losing structural stability (${mistakesLeft} chances left).`;
+                statusText.className = "text-xs text-center text-amber-400 mt-2 font-semibold";
+            } else {
+                statusText.innerText = `Critical condition! Only ${mistakesLeft} mistake left!`;
+                statusText.className = "text-xs text-center text-rose-400 mt-2 font-bold animate-pulse";
+            }
+        }
+
+        function loadWord(index) {
+            const data = wordList[index];
+            mistakesLeft = 6;
+            guessedLetters.clear();
+            activeHintType = null;
+            document.getElementById('hintBox').classList.add('hidden');
+
+            // Update Headers
+            document.getElementById('wordProgressBadge').innerText = `Word ${index + 1} / ${wordList.length}`;
+            document.getElementById('categoryTitle').innerHTML = `<i class="fa-solid fa-shield-halved text-pink-400"></i> Category: ${data.category}`;
+            
+            // Sentence setup
+            document.getElementById('sentenceContext').innerText = data.sentence;
+
+            // Reset UI
+            renderHearts();
+            updateBridgeVisual();
+
+            // Enable keys
+            const keys = document.querySelectorAll('.letter-btn');
+            keys.forEach(k => {
+                k.disabled = false;
+                k.className = "letter-btn py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-slate-100 text-sm sm:text-base border border-slate-600 shadow transition active:scale-95";
+            });
+
+            renderWordSlots();
+        }
+
+        function renderWordSlots() {
+            const data = wordList[currentWordIndex];
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.innerHTML = '';
+
+            const characters = data.target.split('');
+
+            characters.forEach(char => {
+                const box = document.createElement('div');
+                
+                if (char === ' ') {
+                    box.className = "w-4 h-12"; // Space spacer
+                } else {
+                    box.className = "w-8 h-11 sm:w-10 sm:h-12 rounded-xl bg-slate-900 border-2 border-slate-700 flex items-center justify-center font-black text-lg sm:text-xl text-white shadow-inner";
+                    
+                    if (guessedLetters.has(char) || char === ' ' || char === '-') {
+                        box.innerText = char;
+                        box.classList.add('border-purple-500', 'text-purple-300', 'bg-purple-950/30', 'animate-pop');
+                    } else {
+                        box.innerText = '_';
+                        box.classList.add('text-slate-600');
+                    }
+                }
+                wordDisplay.appendChild(box);
+            });
+        }
+
+        function handlePhysicalKeyboard(e) {
+            if (document.getElementById('gameScreen').classList.contains('hidden')) return;
+            if (!document.getElementById('feedbackModal').classList.contains('hidden')) return;
+
+            const key = e.key.toUpperCase();
+            if ((key >= 'A' && key <= 'Z') || key === "'") {
+                handleGuess(key);
+            }
+        }
+
+        function handleGuess(letter) {
+            if (guessedLetters.has(letter) || mistakesLeft <= 0) return;
+
+            guessedLetters.add(letter);
+            totalGuesses++;
+
+            const btnId = `key-${letter === "'" ? 'APOS' : letter}`;
+            const btn = document.getElementById(btnId);
+
+            const data = wordList[currentWordIndex];
+            const isCorrect = data.target.includes(letter);
+
+            if (isCorrect) {
+                playSound('correct');
+                correctGuesses++;
+                if (btn) {
+                    btn.disabled = true;
+                    btn.className = "letter-btn py-2.5 rounded-lg bg-emerald-600 font-bold text-white text-sm sm:text-base border border-emerald-500 shadow";
+                }
+                renderWordSlots();
+                checkWordComplete();
+            } else {
+                playSound('wrong');
+                mistakesLeft--;
+                if (btn) {
+                    btn.disabled = true;
+                    btn.className = "letter-btn py-2.5 rounded-lg bg-rose-900/60 font-bold text-rose-300 text-sm sm:text-base border border-rose-700 opacity-60";
+                }
+                renderHearts();
+                updateBridgeVisual();
+
+                if (mistakesLeft <= 0) {
+                    // Out of attempts for this word
+                    showFeedback(false);
+                }
+            }
+        }
+
+        function toggleHint(type) {
+            playSound('click');
+            const data = wordList[currentWordIndex];
+            const hintBox = document.getElementById('hintBox');
+            const hintText = document.getElementById('hintText');
+
+            if (activeHintType === type) {
+                hintBox.classList.add('hidden');
+                activeHintType = null;
+            } else {
+                activeHintType = type;
+                hintBox.classList.remove('hidden');
+                if (type === 'grammar') {
+                    hintText.innerHTML = `<strong class="text-indigo-400"><i class="fa-solid fa-book"></i> Grammar Hint:</strong> ${data.grammarHint}`;
+                } else {
+                    hintText.innerHTML = `<strong class="text-pink-400"><i class="fa-solid fa-heart"></i> DEI Context Hint:</strong> ${data.deiHint}`;
+                }
+            }
+        }
+
+        function checkWordComplete() {
+            const data = wordList[currentWordIndex];
+            const chars = data.target.split('');
+            const allGuessed = chars.every(c => c === ' ' || c === '-' || guessedLetters.has(c));
+
+            if (allGuessed) {
+                // Award points: 150 base + 25 per remaining mistake
+                const roundPoints = 150 + (mistakesLeft * 25);
+                score += roundPoints;
+                updateScoreDisplay();
+                playSound('win');
+
+                showFeedback(true);
+            }
+        }
+
+        /* ===================================================================
+           EDUCATIONAL FEEDBACK & GAME PROGRESSION
+           =================================================================== */
+        function showFeedback(won) {
+            const data = wordList[currentWordIndex];
+            const modal = document.getElementById('feedbackModal');
+            const card = document.getElementById('feedbackCard');
+            const iconContainer = document.getElementById('feedbackIconContainer');
+            const title = document.getElementById('feedbackTitle');
+            const content = document.getElementById('feedbackContent');
+
+            if (won) {
+                card.className = "max-w-md w-full bg-slate-800 border-2 border-emerald-500/50 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 opacity-100";
+                iconContainer.className = "w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold border border-emerald-500/30";
+                iconContainer.innerHTML = '<i class="fa-solid fa-bridge-circle-check"></i>';
+                title.innerText = `Bridge Preserved: "${data.target}"`;
+                title.className = "text-lg font-extrabold text-emerald-400";
+            } else {
+                card.className = "max-w-md w-full bg-slate-800 border-2 border-rose-500/50 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 opacity-100";
+                iconContainer.className = "w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl font-bold border border-rose-500/30";
+                iconContainer.innerHTML = '<i class="fa-solid fa-bridge-circle-exclamation"></i>';
+                title.innerText = `The Target Word was "${data.target}"`;
+                title.className = "text-lg font-extrabold text-rose-400";
+            }
+
+            content.innerHTML = `
+                <p class="mb-2"><strong class="text-white">Completed Context:</strong></p>
+                <p class="text-xs italic bg-slate-950/60 p-2.5 rounded border border-slate-700/60 text-purple-200 mb-3">
+                    "${data.sentence.replace('___', `<span class="underline font-bold text-amber-300">${data.target}</span>`)}"
+                </p>
+                <p class="mb-2"><strong class="text-white">Grammar Explanation:</strong> ${data.explanation}</p>
+                <div class="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg text-xs text-purple-200">
+                    <strong class="text-purple-300 block mb-1"><i class="fa-solid fa-heart"></i> Inclusion Tip:</strong>
+                    ${data.deiTip}
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+
+            if (currentWordIndex < wordList.length - 1) {
+                currentWordIndex++;
+                loadWord(currentWordIndex);
+            } else {
+                finishGame();
+            }
+        }
+
+        /* ===================================================================
+           FINAL CERTIFICATE & RESTART
+           =================================================================== */
+        function finishGame() {
+            stopTimer();
+            window.removeEventListener('keydown', handlePhysicalKeyboard);
+            playSound('win');
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 130,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('summaryScreen').classList.remove('hidden');
+
+            document.getElementById('certPlayerName').innerText = playerName;
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalTime').innerText = document.getElementById('timerDisplay').innerText;
+
+            const accuracyVal = totalGuesses > 0 ? Math.round((correctGuesses / totalGuesses) * 100) : 100;
+            document.getElementById('finalAccuracy').innerText = `${accuracyVal}%`;
+
+            // Badges logic
+            const badgesContainer = document.getElementById('badgesContainer');
+            badgesContainer.innerHTML = '';
+
+            const badges = [
+                { title: "Bridge Builder", icon: "fa-person-bridge-crossing", color: "from-purple-500 to-indigo-500", condition: true },
+                { title: "DEI Upstander", icon: "fa-hand-holding-heart", color: "from-pink-500 to-rose-500", condition: score >= 600 },
+                { title: "Grammar Tactician", icon: "fa-graduation-cap", color: "from-emerald-500 to-teal-500", condition: accuracyVal >= 75 },
+                { title: "Swift Solver", icon: "fa-stopwatch", color: "from-amber-500 to-yellow-500", condition: secondsElapsed < 180 }
+            ];
+
+            badges.forEach(b => {
+                if (b.condition) {
+                    const badgeElem = document.createElement('div');
+                    badgeElem.className = `flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${b.color} text-white font-bold text-xs shadow-md`;
+                    badgeElem.innerHTML = `<i class="fa-solid ${b.icon}"></i> <span>${b.title}</span>`;
+                    badgesContainer.appendChild(badgeElem);
+                }
+            });
+        }
+
+        function restartGame() {
+            document.getElementById('summaryScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.add('hidden');
+        }
+
+        function printCertificate() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
