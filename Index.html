@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESCAPE ROOM - BULLYING</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #0b0f19;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Neon Glow Effect for Main Header */
+        .neon-glow-title {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.6),
+                         0 0 20px rgba(59, 130, 246, 0.4),
+                         0 0 30px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Hover animation for activity cards */
+        .level-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .level-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.3), 
+                        0 0 15px 2px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Image overlay scanline effect */
+        .scanline-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanline-container::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+    <header class="container mx-auto px-4 pt-10 pb-6 text-center">
+        <!-- Badge for Course Name -->
+        <div class="inline-flex items-center gap-2 bg-slate-900/80 border border-blue-500/30 rounded-full px-4 py-1.5 mb-6 text-xs sm:text-sm font-semibold tracking-widest text-blue-400 uppercase shadow-lg shadow-blue-950/50">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>TECHNOLOGY IN FOREIGN LANGUAGE TEACHING</span>
+        </div>
+
+        <!-- Main Title -->
+        <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-wider text-white neon-glow-title mb-4 uppercase">
+            ESCAPE ROOM <span class="text-blue-500 block sm:inline">- BULLYING</span>
+        </h1>
+
+        <!-- Welcome Message -->
+        <div class="max-w-3xl mx-auto bg-slate-900/60 border-l-4 border-blue-500 p-4 sm:p-6 rounded-r-xl backdrop-blur-md shadow-xl my-6">
+            <p class="text-lg sm:text-2xl font-medium text-slate-200 tracking-wide">
+                <i class="fa-solid fa-key text-yellow-400 mr-2"></i> 
+                "Welcome to this challenge, here you will learn about bullying using modal verbs!"
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="text-center mb-8">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-300 tracking-widest uppercase inline-block border-b-2 border-blue-500 pb-1">
+                Select a Challenge Level
+            </h2>
+        </div>
+
+        <!-- 
+            ========================================================================
+            INSTRUCCIONES PARA CONFIGURAR ENLACES DE GITHUB PAGES (href):
+            ========================================================================
+            1. Si los archivos de las actividades están en el mismo repositorio/rama:
+               - Cambia href="#" por: href="activity1.html", href="activity2.html", etc.
+            
+            2. Si las actividades están en diferentes RAMAS (Branches) o REPOSITORIOS:
+               - Usa URLs completas de GitHub Pages, por ejemplo:
+                 href="https://tu-usuario.github.io/nombre-repo/activity1.html"
+            ========================================================================
+        -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
+
+            <!-- CARD LEVEL 1 -->
+            <!-- Configurar enlace aquí 👇 -->
+            <a href="activity1.html" class="level-card group block bg-slate-900 border border-slate-800 hover:border-blue-500/60 rounded-2xl overflow-hidden shadow-2xl relative">
+                <div class="scanline-container aspect-video w-full relative bg-slate-800">
+                    <img 
+                        src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=600&q=80" 
+                        alt="Level 1: School Classroom - Understanding Bullying" 
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onerror="this.src='https://placehold.co/600x400/1e293b/3b82f6?text=LEVEL+1';"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                    <span class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider font-title shadow-md">
+                        Level 1
+                    </span>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors mb-2">
+                        Activity 1: Must & Mustn't
+                    </h3>
+                    <p class="text-sm text-slate-400 line-clamp-2 mb-4">
+                        Discover the basic rules and obligations to stand up against bullying in the classroom.
+                    </p>
+                    <div class="flex items-center text-xs font-bold text-blue-400 group-hover:translate-x-2 transition-transform">
+                        <span>START CHALLENGE</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- CARD LEVEL 2 -->
+            <!-- Configurar enlace aquí 👇 -->
+            <a href="activity2.html" class="level-card group block bg-slate-900 border border-slate-800 hover:border-cyan-500/60 rounded-2xl overflow-hidden shadow-2xl relative">
+                <div class="scanline-container aspect-video w-full relative bg-slate-800">
+                    <img 
+                        src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80" 
+                        alt="Level 2: Cyberbullying - Online Safety" 
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onerror="this.src='https://placehold.co/600x400/1e293b/06b6d4?text=LEVEL+2';"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                    <span class="absolute top-3 left-3 bg-cyan-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider font-title shadow-md">
+                        Level 2
+                    </span>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors mb-2">
+                        Activity 2: Should & Should Shouldnt
+                    </h3>
+                    <p class="text-sm text-slate-400 line-clamp-2 mb-4">
+                        Analyze cyberbullying scenarios and give appropriate advice using modals of recommendation.
+                    </p>
+                    <div class="flex items-center text-xs font-bold text-cyan-400 group-hover:translate-x-2 transition-transform">
+                        <span>START CHALLENGE</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- CARD LEVEL 3 -->
+            <!-- Configurar enlace aquí 👇 -->
+            <a href="activity3.html" class="level-card group block bg-slate-900 border border-slate-800 hover:border-purple-500/60 rounded-2xl overflow-hidden shadow-2xl relative">
+                <div class="scanline-container aspect-video w-full relative bg-slate-800">
+                    <img 
+                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
+                        alt="Level 3: Empathy & Support" 
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onerror="this.src='https://placehold.co/600x400/1e293b/a855f7?text=LEVEL+3';"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                    <span class="absolute top-3 left-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider font-title shadow-md">
+                        Level 3
+                    </span>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-xl font-bold text-white group-hover:text-purple-400 transition-colors mb-2">
+                        Activity 3: Can & Could
+                    </h3>
+                    <p class="text-sm text-slate-400 line-clamp-2 mb-4">
+                        Find possibilities and solutions to help victims and become an active bystander.
+                    </p>
+                    <div class="flex items-center text-xs font-bold text-purple-400 group-hover:translate-x-2 transition-transform">
+                        <span>START CHALLENGE</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- CARD LEVEL 4 -->
+            <!-- Configurar enlace aquí 👇 -->
+            <a href="activity4.html" class="level-card group block bg-slate-900 border border-slate-800 hover:border-amber-500/60 rounded-2xl overflow-hidden shadow-2xl relative">
+                <div class="scanline-container aspect-video w-full relative bg-slate-800">
+                    <img 
+                        src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80" 
+                        alt="Level 4: Final Escape - Anti-Bullying Champion" 
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onerror="this.src='https://placehold.co/600x400/1e293b/f59e0b?text=LEVEL+4';"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                    <span class="absolute top-3 left-3 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider font-title shadow-md">
+                        Level 4
+                    </span>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-xl font-bold text-white group-hover:text-amber-400 transition-colors mb-2">
+                        Activity 4: Final Escape
+                    </h3>
+                    <p class="text-sm text-slate-400 line-clamp-2 mb-4">
+                        Apply all modal verbs learned to unlock the final door and escape the room successfully!
+                    </p>
+                    <div class="flex items-center text-xs font-bold text-amber-400 group-hover:translate-x-2 transition-transform">
+                        <span>START CHALLENGE</span>
+                        <i class="fa-solid fa-lock-open ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <footer class="bg-slate-950 border-t border-slate-800/80 py-8 px-4 mt-12">
+        <div class="container mx-auto max-w-5xl text-center">
+            <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3 font-title">
+                Project Creators / Responsibles
+            </h4>
+            <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-6 text-sm sm:text-base font-semibold text-slate-300">
+                <span class="hover:text-blue-400 transition-colors">Alexander Ortega</span>
+                <span class="text-slate-600 hidden sm:inline">•</span>
+                <span class="hover:text-blue-400 transition-colors">Arnold Geovo</span>
+                <span class="text-slate-600 hidden sm:inline">•</span>
+                <span class="hover:text-blue-400 transition-colors">Angelica Carantonio</span>
+                <span class="text-slate-600 hidden sm:inline">•</span>
+                <span class="hover:text-blue-400 transition-colors">Elvis Palacios</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-6">
+                © Educational Escape Room Project - Bullying & Modal Verbs.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
