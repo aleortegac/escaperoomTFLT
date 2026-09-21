@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tricky Respect: DEI & Inclusion Tic-Tac-Toe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#6D28D9',
+                            indigo: '#4F46E5',
+                            pink: '#DB2777',
+                            teal: '#0D9488',
+                            amber: '#D97706',
+                            emerald: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Glassmorphism card styles */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glass-cell {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-cell:hover:not(:disabled) {
+            border-color: rgba(168, 85, 247, 0.6);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        /* Custom board grid glow */
+        .board-glow {
+            box-shadow: 0 0 35px -5px rgba(109, 40, 217, 0.3);
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+        /* Special tile star spin */
+        @keyframes star-glow {
+            0%, 100% { filter: drop-shadow(0 0 4px #F59E0B); }
+            50% { filter: drop-shadow(0 0 12px #F59E0B); }
+        }
+        .star-glow {
+            animation: star-glow 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-shapes text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+                        Tricky Respect
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">DEI, Anti-Bullying & Modal Verbs Tic-Tac-Toe</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div id="gameStatsHeader" class="hidden flex items-center gap-3 sm:gap-6 text-sm font-semibold">
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-amber-400"></i>
+                    <span id="timerDisplay" class="text-amber-300 font-mono">00:00</span>
+                </div>
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-400"></i>
+                    <span id="scoreDisplay" class="text-yellow-300 font-mono">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+
+        <!-- START SCREEN -->
+        <div id="startScreen" class="max-w-xl w-full glass-card border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-16 -right-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl"></div>
+
+            <div class="text-center mb-6 relative">
+                <span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/30 mb-3">
+                    Educational Strategy & Ethics Game
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Tricky: Inclusion Edition</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Play classic Tic-Tac-Toe infused with <span class="text-purple-300 font-semibold">Inclusion Power-Ups</span>, <span class="text-pink-300 font-semibold">Modal Verbs Quizzes</span>, and <span class="text-amber-300 font-semibold">Anti-Bullying Challenges</span>!
+                </p>
+            </div>
+
+            <form id="startForm" onsubmit="startGame(event)" class="space-y-4">
+                <!-- Player Name Input -->
+                <div>
+                    <label for="playerName" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Player Name</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-astronaut absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="playerName" required placeholder="e.g. Alex" 
+                            class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    </div>
+                </div>
+
+                <!-- Game Mode Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Game Mode</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer border border-slate-700 rounded-xl p-3 bg-slate-900/80 hover:border-purple-500 flex items-center gap-3 transition">
+                            <input type="radio" name="gameMode" value="ai" checked onchange="toggleOpponentOptions()" class="accent-purple-500">
+                            <div>
+                                <div class="text-sm font-bold text-white"><i class="fa-solid fa-robot text-purple-400 mr-1"></i> VS AI</div>
+                                <div class="text-[10px] text-slate-400">Single Player</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer border border-slate-700 rounded-xl p-3 bg-slate-900/80 hover:border-purple-500 flex items-center gap-3 transition">
+                            <input type="radio" name="gameMode" value="pvp" onchange="toggleOpponentOptions()" class="accent-purple-500">
+                            <div>
+                                <div class="text-sm font-bold text-white"><i class="fa-solid fa-users text-pink-400 mr-1"></i> 2 Players</div>
+                                <div class="text-[10px] text-slate-400">Pass & Play Local</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- AI Difficulty (Conditional) -->
+                <div id="aiDifficultyContainer">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">AI Difficulty</label>
+                    <select id="aiDifficulty" class="w-full py-3 px-4 bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="easy">Easy (Learning Companion)</option>
+                        <option value="medium" selected>Medium (Balanced Challenge)</option>
+                        <option value="unbeatable">Unbeatable (Minimax AI Master)</option>
+                    </select>
+                </div>
+
+                <!-- Visual Theme Preset -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Symbol & Color Theme</label>
+                    <select id="themePreset" class="w-full py-3 px-4 bg-slate-900/90 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="inclusion" selected>🤝 Inclusion (Heart vs Hands)</option>
+                        <option value="respect">🛡️ Respect (Shield vs Star)</option>
+                        <option value="classic">⭕ Classic (X vs O)</option>
+                    </select>
+                </div>
+
+                <!-- How to Play Brief -->
+                <div class="bg-slate-900/60 rounded-xl p-3.5 border border-slate-800 text-xs text-slate-300 space-y-1">
+                    <p class="font-bold text-purple-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Special Tricky Mechanics:
+                    </p>
+                    <p class="text-slate-400">
+                        • Claiming marked <span class="text-amber-300 font-bold">✨ Power Tiles</span> triggers a DEI Quiz! Answer correctly to double your points or earn a shield bonus.
+                    </p>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 transform hover:-translate-y-0.5 transition active:translate-y-0 flex items-center justify-center gap-2 text-base">
+                    <span>Play Tricky</span>
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- GAMEPLAY ARENA -->
+        <div id="gameScreen" class="hidden max-w-4xl w-full flex flex-col gap-6">
+            
+            <!-- Player Status & Turn Indicator -->
+            <div class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-800 shadow-xl">
+                <!-- Player 1 Box -->
+                <div id="p1Card" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-purple-950/60 border-2 border-purple-500 transition-all">
+                    <span id="p1Symbol" class="text-2xl">❤️</span>
+                    <div>
+                        <div id="p1Name" class="text-sm font-extrabold text-white">Player 1</div>
+                        <div class="text-[10px] text-purple-300 uppercase font-bold tracking-wider">Score: <span id="p1Score" class="text-yellow-300 font-mono">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Turn Banner -->
+                <div class="text-center flex-grow">
+                    <span id="turnBadge" class="inline-block px-3 py-1 rounded-full bg-slate-800 text-xs font-bold text-slate-300 border border-slate-700 mb-1">
+                        Current Turn
+                    </span>
+                    <h3 id="turnText" class="text-lg font-black text-white">Player 1's Turn</h3>
+                </div>
+
+                <!-- Player 2 / AI Box -->
+                <div id="p2Card" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900 border-2 border-slate-800 transition-all">
+                    <span id="p2Symbol" class="text-2xl">🤝</span>
+                    <div>
+                        <div id="p2Name" class="text-sm font-extrabold text-white">Opponent</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Score: <span id="p2Score" class="text-yellow-300 font-mono">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Board Area & Sidebar -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                
+                <!-- Tic-Tac-Toe Grid (3x3) -->
+                <div class="md:col-span-7 flex justify-center">
+                    <div class="w-full max-w-[340px] aspect-square grid grid-cols-3 gap-3 p-4 bg-slate-900/90 rounded-3xl border border-slate-800 board-glow shadow-2xl">
+                        <!-- 9 Cells generated via JS -->
+                        <button id="cell-0" onclick="cellClicked(0)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-1" onclick="cellClicked(1)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-2" onclick="cellClicked(2)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        
+                        <button id="cell-3" onclick="cellClicked(3)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-4" onclick="cellClicked(4)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-5" onclick="cellClicked(5)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        
+                        <button id="cell-6" onclick="cellClicked(6)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-7" onclick="cellClicked(7)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                        <button id="cell-8" onclick="cellClicked(8)" class="glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden"></button>
+                    </div>
+                </div>
+
+                <!-- Educational Info & Controls Panel -->
+                <div class="md:col-span-5 space-y-4">
+                    <!-- Current Mission Card -->
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5 mb-2">
+                            <i class="fa-solid fa-bullseye"></i> DEI Round Mission
+                        </h4>
+                        <p id="missionText" class="text-xs text-slate-300 leading-relaxed">
+                            Claim 3 matching symbols in a row while answering <span class="text-amber-300 font-semibold">Modal Verbs</span> power-up questions to secure bonus points!
+                        </p>
+                    </div>
+
+                    <!-- Round History / Mini Log -->
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-pink-400 flex items-center gap-1.5 mb-2">
+                            <i class="fa-solid fa-list-check"></i> Match Feed
+                        </h4>
+                        <div id="matchLog" class="text-xs text-slate-400 space-y-1 max-h-28 overflow-y-auto font-mono">
+                            <p class="text-slate-500">Game started. Good luck!</p>
+                        </div>
+                    </div>
+
+                    <!-- Reset Round Button -->
+                    <button onclick="resetBoardOnly()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate text-purple-400"></i> Reset Current Board
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- EDUCATIONAL POWER-UP QUIZ MODAL -->
+        <div id="quizModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div id="quizCard" class="max-w-md w-full glass-card border-2 border-amber-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-bold border border-amber-500/30">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-white">Power-Up Tile Claimed!</h3>
+                        <p class="text-xs text-amber-300 font-semibold">Answer to double your move points</p>
+                    </div>
+                </div>
+
+                <div id="quizQuestionContainer" class="my-4 bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-sm">
+                    <p id="quizQuestion" class="text-slate-200 font-medium leading-relaxed"></p>
+                </div>
+
+                <div id="quizOptions" class="space-y-2 mb-4">
+                    <!-- Dynamic option buttons injected JS -->
+                </div>
+
+                <div id="quizFeedback" class="hidden text-xs p-3 rounded-xl mb-3 font-semibold"></div>
+
+                <button id="closeQuizBtn" onclick="resolveQuizResult()" class="hidden w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition">
+                    Continue Game
+                </button>
+            </div>
+        </div>
+
+        <!-- CERTIFICATE / SUMMARY SCREEN -->
+        <div id="summaryScreen" class="hidden max-w-2xl w-full glass-card border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center">
+            <div class="absolute -top-16 -right-16 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+            <div class="inline-flex p-4 bg-gradient-to-tr from-amber-500/20 to-yellow-500/20 rounded-full border border-amber-500/30 text-amber-400 mb-4">
+                <i class="fa-solid fa-award text-4xl"></i>
+            </div>
+
+            <p class="text-xs font-bold uppercase tracking-widest text-amber-400">Official Certificate of Accomplishment</p>
+            <h2 class="text-2xl sm:text-4xl font-black text-white mt-1 mb-2">Tricky Inclusion Champion</h2>
+            <p class="text-slate-300 text-sm max-w-md mx-auto mb-6">
+                This certificate honors <span id="certPlayerName" class="font-extrabold text-purple-300 underline">Player</span> for showing strategic excellence and commitment to DEI and Anti-Bullying principles!
+            </p>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/90 p-4 rounded-xl border border-slate-800 mb-6 text-left sm:text-center">
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Final Score</span>
+                    <span id="finalScore" class="text-xl sm:text-2xl font-black text-yellow-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Duration</span>
+                    <span id="finalTime" class="text-xl sm:text-2xl font-black text-amber-300">00:00</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Outcome</span>
+                    <span id="finalOutcome" class="text-xl sm:text-2xl font-black text-emerald-400">Victory</span>
+                </div>
+            </div>
+
+            <!-- Earned Badges -->
+            <div class="mb-8">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Badges & Achievements</h4>
+                <div id="badgesContainer" class="flex flex-wrap justify-center gap-3">
+                    <!-- Dynamic badges -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="restartGame()" class="py-3 px-6 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Play Again
+                </button>
+                <button onclick="printCertificate()" class="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Certificate
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 text-center py-4 text-xs text-slate-500">
+        <p>Tricky Inclusion Game • Educational Strategy with Modal Verbs & Anti-Bullying Awareness</p>
+    </footer>
+
+    <script>
+        /* ===================================================================
+           DEI & MODAL VERBS POWER-UP QUESTION BANK
+           =================================================================== */
+        const powerUpQuestions = [
+            {
+                q: "Which modal verb best fits? 'We ___ allow discrimination in our school.'",
+                options: ["mustn't", "should", "don't have to", "can"],
+                correct: 0,
+                exp: "<b>'Mustn't'</b> expresses a strict prohibition against discrimination."
+            },
+            {
+                q: "Choose the right verb: 'You ___ stand up for classmates being bullied.'",
+                options: ["ought to", "can't", "mustn't", "don't have to"],
+                correct: 0,
+                exp: "<b>'Ought to'</b> highlights a strong moral obligation to act as an upstander."
+            },
+            {
+                q: "Which modal fits? 'Inclusive environments ___ everyone to participate equally.'",
+                options: ["allow", "mustn't", "can't", "don't have to"],
+                correct: 0,
+                exp: "<b>'Allow'</b> means granting permission and enabling equal access."
+            },
+            {
+                q: "Complete the sentence: 'We ___ double-check facts before sharing rumors online.'",
+                options: ["should", "can't", "mustn't", "allow"],
+                correct: 0,
+                exp: "<b>'Should'</b> gives constructive advice for responsible online conduct."
+            },
+            {
+                q: "What does Equity mean in DEI?",
+                options: ["Giving everyone tailored support", "Giving everyone identical tools", "Ignoring individual differences", "Excluding certain groups"],
+                correct: 0,
+                exp: "Equity ensures everyone receives what they specifically need to succeed."
+            }
+        ];
+
+        /* ===================================================================
+           STATE VARIABLES
+           =================================================================== */
+        let gameMode = "ai"; // "ai" or "pvp"
+        let aiDifficulty = "medium"; // "easy", "medium", "unbeatable"
+        let themePreset = "inclusion";
+        
+        let p1Name = "Player 1";
+        let p2Name = "AI Opponent";
+
+        let p1Symbol = "❤️";
+        let p2Symbol = "🤝";
+
+        let p1Score = 0;
+        let p2Score = 0;
+
+        let board = Array(9).fill(null); // Array of 9 cells
+        let powerUpTileIndex = null; // Random index 0-8 for power-up
+        let turn = "P1"; // "P1" or "P2"
+        let gameOver = false;
+
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let pendingPowerUpMove = null;
+
+        /* ===================================================================
+           WEB AUDIO API SYNTHESIZER
+           =================================================================== */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'powerup') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.setValueAtTime(659, now + 0.08);
+                    osc.frequency.setValueAtTime(783, now + 0.16);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                } else if (type === 'tie') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(250, now + 0.15);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        /* ===================================================================
+           INITIALIZATION & FORM HANDLERS
+           =================================================================== */
+        function toggleOpponentOptions() {
+            const mode = document.querySelector('input[name="gameMode"]:checked').value;
+            const aiContainer = document.getElementById('aiDifficultyContainer');
+            if (mode === 'pvp') {
+                aiContainer.classList.add('hidden');
+            } else {
+                aiContainer.classList.remove('hidden');
+            }
+        }
+
+        function startGame(e) {
+            e.preventDefault();
+            initAudio();
+
+            p1Name = document.getElementById('playerName').value.trim() || "Player 1";
+            gameMode = document.querySelector('input[name="gameMode"]:checked').value;
+            aiDifficulty = document.getElementById('aiDifficulty').value;
+            themePreset = document.getElementById('themePreset').value;
+
+            if (gameMode === 'pvp') {
+                p2Name = "Player 2";
+            } else {
+                p2Name = `AI (${aiDifficulty.toUpperCase()})`;
+            }
+
+            // Apply theme symbols
+            if (themePreset === 'inclusion') {
+                p1Symbol = "❤️";
+                p2Symbol = "🤝";
+            } else if (themePreset === 'respect') {
+                p1Symbol = "🛡️";
+                p2Symbol = "⭐";
+            } else {
+                p1Symbol = "❌";
+                p2Symbol = "⭕";
+            }
+
+            // Update UI
+            document.getElementById('p1Name').innerText = p1Name;
+            document.getElementById('p2Name').innerText = p2Name;
+            document.getElementById('p1Symbol').innerText = p1Symbol;
+            document.getElementById('p2Symbol').innerText = p2Symbol;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.remove('hidden');
+
+            p1Score = 0;
+            p2Score = 0;
+            secondsElapsed = 0;
+
+            updateScoreboard();
+            startTimer();
+            resetBoard();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function updateScoreboard() {
+            document.getElementById('p1Score').innerText = p1Score;
+            document.getElementById('p2Score').innerText = p2Score;
+            document.getElementById('scoreDisplay').innerText = p1Score;
+        }
+
+        function logMatch(msg) {
+            const log = document.getElementById('matchLog');
+            const p = document.createElement('p');
+            p.innerText = `• ${msg}`;
+            log.prepend(p);
+        }
+
+        /* ===================================================================
+           BOARD & GAMEPLAY LOGIC
+           =================================================================== */
+        function resetBoardOnly() {
+            resetBoard();
+            logMatch("Board manually reset.");
+        }
+
+        function resetBoard() {
+            board = Array(9).fill(null);
+            gameOver = false;
+            turn = "P1";
+
+            // Spawn random power-up tile
+            powerUpTileIndex = Math.floor(Math.random() * 9);
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.innerText = "";
+                cell.disabled = false;
+                cell.className = "glass-cell rounded-2xl flex items-center justify-center text-4xl font-black text-white transition transform hover:scale-95 active:scale-90 relative overflow-hidden";
+
+                if (i === powerUpTileIndex) {
+                    // Add powerup indicator
+                    const badge = document.createElement('span');
+                    badge.className = "absolute top-1 right-1 text-xs text-amber-400 star-glow";
+                    badge.innerHTML = '<i class="fa-solid fa-bolt"></i>';
+                    cell.appendChild(badge);
+                }
+            }
+
+            updateTurnUI();
+        }
+
+        function updateTurnUI() {
+            const turnText = document.getElementById('turnText');
+            const p1Card = document.getElementById('p1Card');
+            const p2Card = document.getElementById('p2Card');
+
+            if (turn === "P1") {
+                turnText.innerText = `${p1Name}'s Turn (${p1Symbol})`;
+                p1Card.className = "flex items-center gap-3 px-4 py-2.5 rounded-xl bg-purple-950/60 border-2 border-purple-500 shadow-lg shadow-purple-500/20";
+                p2Card.className = "flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900 border-2 border-slate-800 opacity-60";
+            } else {
+                turnText.innerText = `${p2Name}'s Turn (${p2Symbol})`;
+                p2Card.className = "flex items-center gap-3 px-4 py-2.5 rounded-xl bg-pink-950/60 border-2 border-pink-500 shadow-lg shadow-pink-500/20";
+                p1Card.className = "flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900 border-2 border-slate-800 opacity-60";
+            }
+        }
+
+        function cellClicked(index) {
+            if (gameOver || board[index] !== null) return;
+
+            // If power-up tile claimed, trigger quiz
+            if (index === powerUpTileIndex) {
+                pendingPowerUpMove = index;
+                triggerPowerUpQuiz();
+                return;
+            }
+
+            executeMove(index, false);
+        }
+
+        function executeMove(index, isPowerUpBonus) {
+            playSound('click');
+            const currentSymbol = (turn === "P1") ? p1Symbol : p2Symbol;
+            board[index] = turn;
+
+            const cell = document.getElementById(`cell-${index}`);
+            cell.innerText = currentSymbol;
+            cell.disabled = true;
+
+            // Move score addition
+            const basePoints = isPowerUpBonus ? 100 : 50;
+            if (turn === "P1") p1Score += basePoints;
+            else p2Score += basePoints;
+            updateScoreboard();
+
+            logMatch(`${turn === "P1" ? p1Name : p2Name} placed ${currentSymbol} on cell #${index + 1}`);
+
+            // Check Win/Tie
+            const winningCombo = checkWinningCombo(board);
+            if (winningCombo) {
+                handleWin(turn, winningCombo);
+                return;
+            } else if (board.every(c => c !== null)) {
+                handleTie();
+                return;
+            }
+
+            // Switch Turn
+            turn = (turn === "P1") ? "P2" : "P1";
+            updateTurnUI();
+
+            // AI Turn if applicable
+            if (!gameOver && gameMode === "ai" && turn === "P2") {
+                setTimeout(makeAIMove, 500);
+            }
+        }
+
+        /* ===================================================================
+           POWER-UP QUIZ MECHANIC
+           =================================================================== */
+        let currentQuiz = null;
+
+        function triggerPowerUpQuiz() {
+            playSound('powerup');
+            currentQuiz = powerUpQuestions[Math.floor(Math.random() * powerUpQuestions.length)];
+
+            document.getElementById('quizQuestion').innerText = currentQuiz.q;
+            const optsContainer = document.getElementById('quizOptions');
+            optsContainer.innerHTML = '';
+
+            currentQuiz.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-left font-bold text-xs text-slate-200 rounded-xl border border-slate-700 transition flex items-center justify-between";
+                btn.innerText = opt;
+                btn.onclick = () => answerQuiz(idx);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quizFeedback').className = "hidden text-xs p-3 rounded-xl mb-3 font-semibold";
+            document.getElementById('closeQuizBtn').classList.add('hidden');
+            document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        function answerQuiz(selectedIndex) {
+            const isCorrect = (selectedIndex === currentQuiz.correct);
+            const feedback = document.getElementById('quizFeedback');
+            const closeBtn = document.getElementById('closeQuizBtn');
+
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.className = "text-xs p-3 rounded-xl mb-3 font-semibold bg-emerald-950/60 border border-emerald-500/40 text-emerald-300";
+                feedback.innerHTML = `✓ <strong>Correct!</strong> Double points power-up earned! <br>${currentQuiz.exp}`;
+            } else {
+                feedback.className = "text-xs p-3 rounded-xl mb-3 font-semibold bg-rose-950/60 border border-rose-500/40 text-rose-300";
+                feedback.innerHTML = `✗ <strong>Incorrect!</strong> standard tile claim applied. <br>${currentQuiz.exp}`;
+            }
+
+            closeBtn.classList.remove('hidden');
+            closeBtn.dataset.isCorrect = isCorrect;
+        }
+
+        function resolveQuizResult() {
+            document.getElementById('quizModal').classList.add('hidden');
+            const closeBtn = document.getElementById('closeQuizBtn');
+            const isCorrect = (closeBtn.dataset.isCorrect === 'true');
+
+            const index = pendingPowerUpMove;
+            pendingPowerUpMove = null;
+            powerUpTileIndex = null; // Power-up consumed
+
+            executeMove(index, isCorrect);
+        }
+
+        /* ===================================================================
+           AI OPPONENT LOGIC (EASY, MEDIUM, UNBEATABLE MINIMAX)
+           =================================================================== */
+        function makeAIMove() {
+            if (gameOver) return;
+
+            let choice = null;
+            const available = board.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
+
+            if (aiDifficulty === "easy") {
+                // Random choice
+                choice = available[Math.floor(Math.random() * available.length)];
+            } else if (aiDifficulty === "medium") {
+                // 50% minimax, 50% random
+                if (Math.random() < 0.5) choice = getBestMinimaxMove();
+                else choice = available[Math.floor(Math.random() * available.length)];
+            } else {
+                // Unbeatable Minimax
+                choice = getBestMinimaxMove();
+            }
+
+            if (choice !== null) {
+                if (choice === powerUpTileIndex) {
+                    // AI claims powerup with automatic 50% quiz success chance
+                    const isCorrect = Math.random() < 0.7;
+                    powerUpTileIndex = null;
+                    executeMove(choice, isCorrect);
+                } else {
+                    executeMove(choice, false);
+                }
+            }
+        }
+
+        function getBestMinimaxMove() {
+            let bestScore = -Infinity;
+            let move = null;
+
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = "P2";
+                    let score = minimax(board, 0, false);
+                    board[i] = null;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = i;
+                    }
+                }
+            }
+            return move;
+        }
+
+        const scoresMap = { P2: 10, P1: -10, tie: 0 };
+
+        function minimax(tempBoard, depth, isMaximizing) {
+            const winner = checkWinningPlayer(tempBoard);
+            if (winner !== null) return scoresMap[winner];
+            if (tempBoard.every(c => c !== null)) return scoresMap.tie;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (tempBoard[i] === null) {
+                        tempBoard[i] = "P2";
+                        let score = minimax(tempBoard, depth + 1, false);
+                        tempBoard[i] = null;
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (tempBoard[i] === null) {
+                        tempBoard[i] = "P1";
+                        let score = minimax(tempBoard, depth + 1, true);
+                        tempBoard[i] = null;
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+        /* ===================================================================
+           WIN & TIE CONDITIONS
+           =================================================================== */
+        const winCombos = [
+            [0,1,2], [3,4,5], [6,7,8], // Rows
+            [0,3,6], [1,4,7], [2,5,8], // Cols
+            [0,4,8], [2,4,6]          // Diagonals
+        ];
+
+        function checkWinningCombo(b) {
+            for (let combo of winCombos) {
+                if (b[combo[0]] && b[combo[0]] === b[combo[1]] && b[combo[0]] === b[combo[2]]) {
+                    return combo;
+                }
+            }
+            return null;
+        }
+
+        function checkWinningPlayer(b) {
+            const combo = checkWinningCombo(b);
+            if (combo) return b[combo[0]];
+            return null;
+        }
+
+        function handleWin(winnerTag, combo) {
+            gameOver = true;
+            playSound('win');
+
+            // Highlight winning cells
+            combo.forEach(idx => {
+                const cell = document.getElementById(`cell-${idx}`);
+                cell.classList.add('border-emerald-400', 'bg-emerald-950/80', 'animate-pulse');
+            });
+
+            const winnerName = (winnerTag === "P1") ? p1Name : p2Name;
+            if (winnerTag === "P1") p1Score += 300;
+            else p2Score += 300;
+            updateScoreboard();
+
+            logMatch(`🎉 ${winnerName} WON THE ROUND! (+300 Bonus Points)`);
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+            }
+
+            setTimeout(showSummaryScreen, 1800);
+        }
+
+        function handleTie() {
+            gameOver = true;
+            playSound('tie');
+            logMatch("🤝 It's a Tie! Solid effort from both players.");
+
+            setTimeout(showSummaryScreen, 1500);
+        }
+
+        /* ===================================================================
+           SUMMARY & CERTIFICATE
+           =================================================================== */
+        function showSummaryScreen() {
+            stopTimer();
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('summaryScreen').classList.remove('hidden');
+
+            document.getElementById('certPlayerName').innerText = p1Name;
+            document.getElementById('finalScore').innerText = p1Score;
+            document.getElementById('finalTime').innerText = document.getElementById('timerDisplay').innerText;
+
+            const outcomeElem = document.getElementById('finalOutcome');
+            if (p1Score > p2Score) {
+                outcomeElem.innerText = "Victory!";
+                outcomeElem.className = "text-xl sm:text-2xl font-black text-emerald-400";
+            } else if (p1Score < p2Score) {
+                outcomeElem.innerText = "Runner Up";
+                outcomeElem.className = "text-xl sm:text-2xl font-black text-amber-400";
+            } else {
+                outcomeElem.innerText = "Draw Match";
+                outcomeElem.className = "text-xl sm:text-2xl font-black text-purple-400";
+            }
+
+            // Badges
+            const badgesContainer = document.getElementById('badgesContainer');
+            badgesContainer.innerHTML = '';
+
+            const badges = [
+                { title: "Tricky Tactician", icon: "fa-chess-board", color: "from-purple-500 to-indigo-500", condition: true },
+                { title: "Inclusion Ally", icon: "fa-handshake-angle", color: "from-pink-500 to-rose-500", condition: p1Score >= 200 },
+                { title: "Grammar Master", icon: "fa-bolt", color: "from-amber-500 to-yellow-500", condition: p1Score >= 400 }
+            ];
+
+            badges.forEach(b => {
+                if (b.condition) {
+                    const badgeElem = document.createElement('div');
+                    badgeElem.className = `flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${b.color} text-white font-bold text-xs shadow-md`;
+                    badgeElem.innerHTML = `<i class="fa-solid ${b.icon}"></i> <span>${b.title}</span>`;
+                    badgesContainer.appendChild(badgeElem);
+                }
+            });
+        }
+
+        function restartGame() {
+            document.getElementById('summaryScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.add('hidden');
+        }
+
+        function printCertificate() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

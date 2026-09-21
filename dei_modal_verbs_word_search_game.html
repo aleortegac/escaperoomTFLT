@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sopa de Letras DE&I & Modal Verbs</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            dark: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .grid-cell {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            transition: all 0.15s ease;
+        }
+
+        .grid-cell.selected {
+            background-color: rgba(139, 92, 246, 0.8) !important;
+            color: #ffffff !important;
+            transform: scale(0.95);
+            border-radius: 0.375rem;
+        }
+
+        .grid-cell.found {
+            background-color: rgba(16, 185, 129, 0.85) !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            border-radius: 0.375rem;
+            animation: pulse-green 0.5s ease-out;
+        }
+
+        .grid-cell.hinted {
+            animation: ping-hint 1s infinite alternate;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes ping-hint {
+            0% { background-color: rgba(245, 158, 11, 0.4); transform: scale(1); }
+            100% { background-color: rgba(245, 158, 11, 0.9); transform: scale(1.1); color: #000; }
+        }
+
+        /* Certificate Print Styling */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableCertificate, #printableCertificate * {
+                visibility: visible;
+            }
+            #printableCertificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white !important;
+                color: black !important;
+                border: 10px solid #8b5cf6 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+
+    <!-- Header Navigation & Info Bar -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                    <i class="fa-solid fa-font text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-300">
+                        DE&I & Modal Verbs Word Search
+                    </h1>
+                    <p class="text-[11px] text-slate-400">Sopa de Letras Educativa Anti-Bullying</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Counters (Visible when playing) -->
+            <div id="gameStatsBar" class="hidden flex items-center gap-3 sm:gap-6 text-xs sm:text-sm">
+                <!-- Timer -->
+                <div class="bg-slate-950/90 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-amber-400 animate-pulse"></i>
+                    <span id="timerDisplay" class="font-mono text-amber-300 font-bold">00:00</span>
+                </div>
+
+                <!-- Score -->
+                <div class="bg-slate-950/90 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-purple-400"></i>
+                    <span class="text-slate-400">Puntos:</span>
+                    <span id="scoreDisplay" class="font-mono text-purple-300 font-bold">0</span>
+                </div>
+
+                <!-- Progress Counter -->
+                <div class="bg-slate-950/90 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-emerald-400"></i>
+                    <span id="progressDisplay" class="font-mono text-emerald-300 font-bold">0 / 12</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center items-center">
+
+        <!-- ========================================== -->
+        <!-- 1. WELCOME & PLAYER START SCREEN           -->
+        <!-- ========================================== -->
+        <section id="welcomeScreen" class="max-w-xl w-full glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl text-center my-auto">
+            <div class="w-16 h-16 bg-purple-600/20 text-purple-400 border border-purple-500/30 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">¡Bienvenido al Desafío!</h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-2 mb-6 leading-relaxed">
+                Encuentra las palabras clave sobre <span class="text-purple-300 font-bold">Verbos Modales</span> y principios de <span class="text-pink-300 font-bold">Respeto, Diversidad, Equidad e Inclusión</span> para vencer el acoso escolar.
+            </p>
+
+            <form onsubmit="startGame(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nombre del Estudiante / Jugador:</label>
+                    <input type="text" id="playerNameInput" required placeholder="Ej. Ana María Gómez" class="w-full py-3 px-4 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm font-semibold transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Tamaño de la Sopa de Letras:</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer bg-slate-900 border border-slate-700 p-3 rounded-xl flex items-center gap-2 hover:border-purple-500 transition">
+                            <input type="radio" name="gridSize" value="12" checked class="accent-purple-500">
+                            <span class="text-xs font-bold text-slate-200">12 x 12 (Estándar)</span>
+                        </label>
+                        <label class="cursor-pointer bg-slate-900 border border-slate-700 p-3 rounded-xl flex items-center gap-2 hover:border-purple-500 transition">
+                            <input type="radio" name="gridSize" value="14" class="accent-purple-500">
+                            <span class="text-xs font-bold text-slate-200">14 x 14 (Avanzado)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 mt-2 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white font-black rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-base tracking-wide">
+                    <span>INICIAR SOPA DE LETRAS</span>
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 2. GAME BOARD & WORDS SIDEBAR CONTAINER   -->
+        <!-- ========================================== -->
+        <section id="gameScreen" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- LEFT: Interactive Grid (7 Columns lg) -->
+            <div class="lg:col-span-7 glass-card rounded-3xl p-4 sm:p-6 border border-slate-800 flex flex-col items-center justify-center relative shadow-2xl">
+                
+                <!-- Action Controls Above Grid -->
+                <div class="w-full flex items-center justify-between border-b border-slate-800/80 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span class="text-xs font-bold text-slate-300">Selecciona arrastrando o haciendo clic</span>
+                    </div>
+
+                    <button onclick="getHint()" class="py-1.5 px-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Pedir Pista (-20 pts)</span>
+                    </button>
+                </div>
+
+                <!-- Responsive Grid Wrapper -->
+                <div class="w-full flex justify-center items-center overflow-x-auto p-2">
+                    <div id="wordGrid" class="grid gap-1 sm:gap-1.5 select-none bg-slate-950/80 p-3 rounded-2xl border border-slate-800 shadow-inner">
+                        <!-- Cells injected by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Grid Instruction Footer -->
+                <div class="mt-4 text-[11px] text-slate-400 text-center font-medium">
+                    <i class="fa-solid fa-info-circle text-purple-400 mr-1"></i>
+                    Las palabras pueden estar horizontales, verticales o diagonales (en ambas direcciones).
+                </div>
+
+            </div>
+
+            <!-- RIGHT: Word Search Target List & Badges (5 Columns lg) -->
+            <div class="lg:col-span-5 flex flex-col gap-5">
+                
+                <!-- Target Words List -->
+                <div class="glass-card rounded-3xl p-5 border border-slate-800">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check"></i> Palabras por Encontrar
+                        </h3>
+                        <span id="wordsRemainingBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            12 Restantes
+                        </span>
+                    </div>
+
+                    <!-- Category Tabs / Filter indicators -->
+                    <div class="flex gap-2 mb-3 text-[10px] font-bold">
+                        <span class="px-2 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800/60">
+                            <i class="fa-solid fa-book-bookmark mr-1"></i> Verbos Modales
+                        </span>
+                        <span class="px-2 py-1 rounded-lg bg-pink-950 text-pink-300 border border-pink-800/60">
+                            <i class="fa-solid fa-heart mr-1"></i> Valores DE&I
+                        </span>
+                    </div>
+
+                    <!-- Word Badges Container -->
+                    <div id="wordListContainer" class="grid grid-cols-2 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                        <!-- Words injected by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Last Educational Unlock Highlight -->
+                <div class="glass-card rounded-3xl p-4 border border-slate-800 bg-slate-900/60">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i> Último Concepto Desbloqueado:
+                    </div>
+                    <div id="lastUnlockedConcept" class="text-xs italic text-slate-300">
+                        Encuentra una palabra para descubrir su lección gramatical y de inclusión.
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 3. EDUCATIONAL CONCEPT EXPLANATION MODAL   -->
+    <!-- ========================================== -->
+    <div id="conceptModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full glass-card border-2 border-purple-500/50 rounded-3xl p-6 shadow-2xl relative text-center animate-bounce-short">
+            
+            <div id="conceptIconBox" class="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/40 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-award"></i>
+            </div>
+
+            <span id="conceptCategoryTag" class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                VERBO MODAL ENCONTRADO
+            </span>
+
+            <h3 id="conceptWordTitle" class="text-2xl font-black text-white mt-2 mb-1 uppercase font-mono">
+                MUST
+            </h3>
+
+            <!-- Dynamic Grammar or DEI Meaning -->
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs text-slate-200 text-left space-y-2 my-4">
+                <div>
+                    <span class="font-bold text-amber-400 block mb-0.5">Uso en Inglés / Gramática:</span>
+                    <p id="conceptGrammarText" class="text-slate-300">Se usa para expresar una obligación fuerte o regla estricta.</p>
+                </div>
+                <div class="border-t border-slate-800 pt-2">
+                    <span class="font-bold text-emerald-400 block mb-0.5">Aplicación Anti-Bullying / DE&I:</span>
+                    <p id="conceptDeiText" class="text-slate-300">"We MUST respect everyone's differences in our classroom."</p>
+                </div>
+            </div>
+
+            <button onclick="closeConceptModal()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-lg shadow-purple-600/30">
+                Continuar Jugando
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. VICTORY & PRINTABLE CERTIFICATE MODAL   -->
+    <!-- ========================================== -->
+    <div id="victoryModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-lg w-full glass-card border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-center">
+            
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl mx-auto mb-3">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">¡Sopa de Letras Completada!</span>
+            <h2 class="text-2xl sm:text-3xl font-black text-white mt-1 mb-2">¡Felicitaciones, Campeón/a!</h2>
+            <p class="text-xs text-slate-300 leading-relaxed mb-6">
+                Has demostrado excelente dominio de los <span class="text-purple-300 font-bold">Verbos Modales</span> y un fuerte compromiso con el <span class="text-pink-300 font-bold">Respeto y la Inclusión</span>.
+            </p>
+
+            <!-- Final Game Stats Summary -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/90 p-3 rounded-2xl border border-slate-800 text-xs mb-6">
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Tiempo Total:</span>
+                    <span id="finalTimeDisplay" class="font-mono text-amber-300 font-bold text-sm">00:00</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Puntaje Final:</span>
+                    <span id="finalScoreDisplay" class="font-mono text-purple-300 font-bold text-sm">0</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">Palabras:</span>
+                    <span class="font-mono text-emerald-300 font-bold text-sm">12 / 12</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="printCertificate()" class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-print"></i> <span>Imprimir Certificado</span>
+                </button>
+                <button onclick="restartGame()" class="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-rotate-right"></i> <span>Jugar de Nuevo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Printable Certificate Template -->
+    <div id="printableCertificate" class="hidden p-8 border-8 border-purple-600 text-center bg-white text-slate-900">
+        <div class="border-2 border-slate-300 p-8 h-full flex flex-col justify-between items-center">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-black uppercase text-purple-700 tracking-wider">Certificado de Excelencia Educativa</h1>
+                <p class="text-sm text-slate-600 font-semibold">Inclusión, Respeto y Verbos Modales en Inglés</p>
+            </div>
+            
+            <div class="my-8 space-y-4">
+                <p class="text-base text-slate-700">Se otorga con orgullo el presente reconocimiento a:</p>
+                <h2 id="certPlayerName" class="text-3xl font-bold text-slate-900 underline decoration-purple-500">Nombre del Estudiante</h2>
+                <p class="text-sm text-slate-600 max-w-lg mx-auto">
+                    Por completar exitosamente la Sopa de Letras Anti-Bullying, demostrando altos valores de Empatía, Equidad y dominio del idioma Inglés.
+                </p>
+            </div>
+
+            <div class="flex justify-between w-full text-xs text-slate-500 border-t border-slate-300 pt-4 mt-6">
+                <div>
+                    <p class="font-bold">Fecha de Logro:</p>
+                    <p id="certDate">--/--/----</p>
+                </div>
+                <div>
+                    <p class="font-bold">Puntuación Alcanzada:</p>
+                    <p id="certScore">0 Puntos</p>
+                </div>
+                <div>
+                    <p class="font-bold">Sello del Aula Inclusiva</p>
+                    <p class="text-purple-600 font-black">DE&I APPROVED</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===================================================================
+           DATABASE OF WORDS, GRAMMAR & DEI MEANINGS
+           =================================================================== */
+        const TARGET_WORDS_DB = [
+            // Modal Verbs
+            {
+                word: "SHOULD",
+                category: "MODAL",
+                typeLabel: "Verbo Modal (Consejo)",
+                grammar: "Used to offer recommendations or friendly advice.",
+                dei: "You SHOULD support a classmate if they are feeling isolated or left out."
+            },
+            {
+                word: "MUST",
+                category: "MODAL",
+                typeLabel: "Verbo Modal (Obligación)",
+                grammar: "Expresses strong obligation or essential necessity.",
+                dei: "We MUST treat all students with dignity regardless of their origin."
+            },
+            {
+                word: "MUSTNT",
+                category: "MODAL",
+                typeLabel: "Verbo Modal (Prohibición)",
+                grammar: "Used for strict prohibition of actions.",
+                dei: "Students MUSTN'T engage in cyberbullying or verbal harassment."
+            },
+            {
+                word: "OUGHT",
+                category: "MODAL",
+                typeLabel: "Verbo Modal (Deber Ético)",
+                grammar: "Used to express moral duty or ethical responsibility ('ought to').",
+                dei: "We OUGHT to stand up for justice and fair treatment for all."
+            },
+            {
+                word: "ALLOW",
+                category: "MODAL",
+                typeLabel: "Verbo / Permiso",
+                grammar: "Used to give permission or enable participation.",
+                dei: "Inclusive classrooms ALLOW everyone to share their unique ideas."
+            },
+            {
+                word: "CANNOT",
+                category: "MODAL",
+                typeLabel: "Verbo Modal (Imposibilidad)",
+                grammar: "Expresses inability or refusal of permission.",
+                dei: "Discrimination CANNOT be tolerated in a safe learning environment."
+            },
+
+            // DEI & Anti-Bullying Core Values
+            {
+                word: "RESPECT",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Respeto)",
+                grammar: "Noun/Verb: Admiring someone's feelings, rights, or traditions.",
+                dei: "RESPECT is acknowledging that everyone has equal human value."
+            },
+            {
+                word: "EQUITY",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Equidad)",
+                grammar: "Noun: Giving each person what they specifically need to succeed.",
+                dei: "EQUITY differs from equality because it provides personalized support."
+            },
+            {
+                word: "DIVERSITY",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Diversidad)",
+                grammar: "Noun: The practice of including people from different backgrounds.",
+                dei: "DIVERSITY makes our classroom richer with unique perspectives."
+            },
+            {
+                word: "INCLUSION",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Inclusión)",
+                grammar: "Noun: Ensuring that every single individual feels welcomed.",
+                dei: "INCLUSION means nobody has to change who they are to belong."
+            },
+            {
+                word: "EMPATHY",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Empatía)",
+                grammar: "Noun: Understanding and sharing the feelings of another.",
+                dei: "EMPATHY helps us stop bullying before it starts by caring."
+            },
+            {
+                word: "FAIRNESS",
+                category: "DEI",
+                typeLabel: "Valor DE&I (Justicia)",
+                grammar: "Noun: Impartial and just treatment without favoritism.",
+                dei: "FAIRNESS ensures every student gets an equal chance to learn."
+            }
+        ];
+
+        /* ===================================================================
+           STREAMING_CHUNK:Global game state variables...
+           =================================================================== */
+        let playerName = "Estudiante";
+        let gridSize = 12;
+        let gridMatrix = [];
+        let placedWords = [];
+        let foundWords = new Set();
+        
+        let isSelecting = false;
+        let selectionStart = null;
+        let selectedCells = [];
+
+        let score = 0;
+        let timerSeconds = 0;
+        let timerInterval = null;
+
+        /* ===================================================================
+           STREAMING_CHUNK:Web Audio API Synthesizer for SFX...
+           =================================================================== */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'select') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, now);
+                    gain.gain.setValueAtTime(0.02, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'found') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(150, now + 0.08);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'win') {
+                    // Win Chime
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(f, now + (idx * 0.12));
+                        g.gain.setValueAtTime(0.08, now + (idx * 0.12));
+                        g.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.12) + 0.4);
+                        o.start(now + (idx * 0.12));
+                        o.stop(now + (idx * 0.12) + 0.4);
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Word Search Grid Generation Logic...
+           =================================================================== */
+        function startGame(event) {
+            event.preventDefault();
+            initAudio();
+
+            playerName = document.getElementById('playerNameInput').value.trim() || "Estudiante";
+            const radioSize = document.querySelector('input[name="gridSize"]:checked');
+            gridSize = parseInt(radioSize.value, 10);
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameStatsBar').classList.remove('hidden');
+
+            initNewGame();
+        }
+
+        function initNewGame() {
+            score = 0;
+            foundWords.clear();
+            timerSeconds = 0;
+            updateStatsUI();
+
+            // Start Timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                const secs = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+            }, 1000);
+
+            generateGridAndPlaceWords();
+            renderGridUI();
+            renderWordListUI();
+        }
+
+        function generateGridAndPlaceWords() {
+            // Initialize empty matrix
+            gridMatrix = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+            placedWords = [];
+
+            // Directions: [dx, dy] -> H, V, Diag Down-Right, Diag Up-Right
+            const directions = [
+                [1, 0],   // Horizontal Right
+                [0, 1],   // Vertical Down
+                [1, 1],   // Diag Down-Right
+                [-1, 1]   // Diag Down-Left
+            ];
+
+            TARGET_WORDS_DB.forEach(item => {
+                const word = item.word;
+                let placed = false;
+                let attempts = 0;
+
+                while (!placed && attempts < 100) {
+                    attempts++;
+                    const dir = directions[Math.floor(Math.random() * directions.length)];
+                    const dx = dir[0];
+                    const dy = dir[1];
+
+                    // Determine starting bounds
+                    let startX = Math.floor(Math.random() * gridSize);
+                    let startY = Math.floor(Math.random() * gridSize);
+
+                    let endX = startX + (word.length - 1) * dx;
+                    let endY = startY + (word.length - 1) * dy;
+
+                    if (endX >= 0 && endX < gridSize && endY >= 0 && endY < gridSize) {
+                        // Check collision
+                        let fits = true;
+                        let cellCoords = [];
+
+                        for (let i = 0; i < word.length; i++) {
+                            let cx = startX + i * dx;
+                            let cy = startY + i * dy;
+                            let currentVal = gridMatrix[cy][cx];
+
+                            if (currentVal !== '' && currentVal !== word[i]) {
+                                fits = false;
+                                break;
+                            }
+                            cellCoords.push({ x: cx, y: cy });
+                        }
+
+                        if (fits) {
+                            // Place letters
+                            for (let i = 0; i < word.length; i++) {
+                                let cx = startX + i * dx;
+                                let cy = startY + i * dy;
+                                gridMatrix[cy][cx] = word[i];
+                            }
+                            placedWords.push({
+                                ...item,
+                                coords: cellCoords
+                            });
+                            placed = true;
+                        }
+                    }
+                }
+            });
+
+            // Fill remaining empty cells with random letters A-Z
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (gridMatrix[r][c] === '') {
+                        gridMatrix[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    }
+                }
+            }
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Rendering Grid and Handling Selection Events...
+           =================================================================== */
+        function renderGridUI() {
+            const gridContainer = document.getElementById('wordGrid');
+            gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
+            gridContainer.innerHTML = '';
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const cellBtn = document.createElement('div');
+                    cellBtn.className = "grid-cell w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center font-mono font-bold text-xs sm:text-sm bg-slate-900 border border-slate-800/80 rounded-md text-slate-200 cursor-pointer hover:bg-slate-800";
+                    cellBtn.innerText = gridMatrix[r][c];
+                    cellBtn.dataset.row = r;
+                    cellBtn.dataset.col = c;
+
+                    // Mouse & Touch listeners for drag selection
+                    cellBtn.addEventListener('mousedown', (e) => startSelection(r, c, e));
+                    cellBtn.addEventListener('mouseenter', () => updateSelection(r, c));
+                    cellBtn.addEventListener('touchstart', (e) => handleTouchStart(r, c, e), { passive: false });
+                    cellBtn.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+                    gridContainer.appendChild(cellBtn);
+                }
+            }
+
+            document.addEventListener('mouseup', endSelection);
+            document.addEventListener('touchend', endSelection);
+        }
+
+        function renderWordListUI() {
+            const container = document.getElementById('wordListContainer');
+            container.innerHTML = '';
+
+            TARGET_WORDS_DB.forEach(item => {
+                const isFound = foundWords.has(item.word);
+                const badge = document.createElement('div');
+                
+                const catBg = item.category === 'MODAL' 
+                    ? (isFound ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-300')
+                    : (isFound ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-300');
+
+                badge.className = `p-2 rounded-xl border font-mono text-xs font-bold flex items-center justify-between transition ${catBg} ${isFound ? 'line-through opacity-75' : ''}`;
+                badge.id = `wordBadge-${item.word}`;
+
+                badge.innerHTML = `
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid ${isFound ? 'fa-check-circle text-emerald-400' : 'fa-circle-dot text-slate-600'} text-[10px]"></i>
+                        ${item.word}
+                    </span>
+                    <span class="text-[9px] font-sans font-normal opacity-70">${item.category}</span>
+                `;
+
+                container.appendChild(badge);
+            });
+
+            document.getElementById('wordsRemainingBadge').innerText = `${TARGET_WORDS_DB.length - foundWords.size} Restantes`;
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Drag / Touch Line Selection Logic...
+           =================================================================== */
+        function startSelection(r, c, e) {
+            if (e) e.preventDefault();
+            isSelecting = true;
+            selectionStart = { r, c };
+            selectedCells = [{ r, c }];
+            highlightSelection();
+            playSound('select');
+        }
+
+        function updateSelection(r, c) {
+            if (!isSelecting || !selectionStart) return;
+
+            // Calculate straight line vector (Horizontal, Vertical, or 45-deg Diagonal)
+            const dr = r - selectionStart.r;
+            const dc = c - selectionStart.c;
+
+            if (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) {
+                const steps = Math.max(Math.abs(dr), Math.abs(dc));
+                const stepR = dr === 0 ? 0 : dr / steps;
+                const stepC = dc === 0 ? 0 : dc / steps;
+
+                selectedCells = [];
+                for (let i = 0; i <= steps; i++) {
+                    selectedCells.push({
+                        r: selectionStart.r + i * stepR,
+                        c: selectionStart.c + i * stepC
+                    });
+                }
+                highlightSelection();
+            }
+        }
+
+        function handleTouchStart(r, c, e) {
+            e.preventDefault();
+            startSelection(r, c, e);
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isSelecting) return;
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.dataset.row !== undefined) {
+                const r = parseInt(element.dataset.row, 10);
+                const c = parseInt(element.dataset.col, 10);
+                updateSelection(r, c);
+            }
+        }
+
+        function highlightSelection() {
+            // Reset un-found cell highlights
+            const allCells = document.querySelectorAll('.grid-cell');
+            allCells.forEach(cell => {
+                if (!cell.classList.contains('found')) {
+                    cell.classList.remove('selected');
+                }
+            });
+
+            selectedCells.forEach(coord => {
+                const cell = document.querySelector(`.grid-cell[data-row="${coord.r}"][data-col="${coord.c}"]`);
+                if (cell && !cell.classList.contains('found')) {
+                    cell.classList.add('selected');
+                }
+            });
+        }
+
+        function endSelection() {
+            if (!isSelecting) return;
+            isSelecting = false;
+
+            // Form word string from selected cells
+            const selectedWordStr = selectedCells.map(coord => gridMatrix[coord.r][coord.c]).join('');
+            const reversedWordStr = selectedWordStr.split('').reverse().join('');
+
+            let matchedObject = placedWords.find(pw => 
+                (pw.word === selectedWordStr || pw.word === reversedWordStr) && !foundWords.has(pw.word)
+            );
+
+            if (matchedObject) {
+                // SUCCESS MATCH!
+                playSound('found');
+                foundWords.add(matchedObject.word);
+                score += 100;
+
+                // Mark cells permanently as found
+                matchedObject.coords.forEach(coord => {
+                    const cell = document.querySelector(`.grid-cell[data-row="${coord.y}"][data-col="${coord.x}"]`);
+                    if (cell) {
+                        cell.classList.remove('selected', 'hinted');
+                        cell.classList.add('found');
+                    }
+                });
+
+                renderWordListUI();
+                updateStatsUI();
+                showConceptModal(matchedObject);
+
+                // Update highlight concept box
+                document.getElementById('lastUnlockedConcept').innerHTML = `
+                    <b class="text-purple-300 uppercase font-mono">${matchedObject.word}:</b> ${matchedObject.dei}
+                `;
+
+                // Check Victory
+                if (foundWords.size === TARGET_WORDS_DB.length) {
+                    setTimeout(triggerVictory, 1200);
+                }
+
+            } else {
+                // Wrong selection attempt
+                if (selectedCells.length > 1) playSound('error');
+                const allCells = document.querySelectorAll('.grid-cell');
+                allCells.forEach(cell => cell.classList.remove('selected'));
+            }
+
+            selectedCells = [];
+            selectionStart = null;
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Hints, Concept Modals & Victory Logic...
+           =================================================================== */
+        function getHint() {
+            initAudio();
+            const unFound = placedWords.filter(pw => !foundWords.has(pw.word));
+            if (unFound.length === 0) return;
+
+            // Pick first remaining unfound word
+            const target = unFound[0];
+            const firstCellCoord = target.coords[0];
+
+            const cell = document.querySelector(`.grid-cell[data-row="${firstCellCoord.y}"][data-col="${firstCellCoord.x}"]`);
+            if (cell) {
+                cell.classList.add('hinted');
+                playSound('select');
+                score = Math.max(0, score - 20);
+                updateStatsUI();
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('progressDisplay').innerText = `${foundWords.size} / ${TARGET_WORDS_DB.length}`;
+        }
+
+        function showConceptModal(item) {
+            document.getElementById('conceptWordTitle').innerText = item.word;
+            document.getElementById('conceptCategoryTag').innerText = item.typeLabel;
+            document.getElementById('conceptGrammarText').innerText = item.grammar;
+            document.getElementById('conceptDeiText').innerText = item.dei;
+
+            document.getElementById('conceptModal').classList.remove('hidden');
+        }
+
+        function closeConceptModal() {
+            initAudio();
+            playSound('select');
+            document.getElementById('conceptModal').classList.add('hidden');
+        }
+
+        function triggerVictory() {
+            clearInterval(timerInterval);
+            playSound('win');
+
+            const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (timerSeconds % 60).toString().padStart(2, '0');
+            const timeStr = `${mins}:${secs}`;
+
+            document.getElementById('finalTimeDisplay').innerText = timeStr;
+            document.getElementById('finalScoreDisplay').innerText = score;
+
+            // Prepare Certificate Data
+            document.getElementById('certPlayerName').innerText = playerName;
+            document.getElementById('certScore').innerText = `${score} Puntos`;
+            document.getElementById('certDate').innerText = new Date().toLocaleDateString('es-ES');
+
+            document.getElementById('victoryModal').classList.remove('hidden');
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } });
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            initNewGame();
+        }
+
+        function printCertificate() {
+            const certElem = document.getElementById('printableCertificate');
+            certElem.classList.remove('hidden');
+            window.print();
+            certElem.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

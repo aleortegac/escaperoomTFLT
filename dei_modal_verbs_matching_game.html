@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respect & Inclusion Quest: Modal Verbs Match</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for Victory Animations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#6D28D9',
+                            indigo: '#4F46E5',
+                            pink: '#DB2777',
+                            teal: '#0D9488',
+                            amber: '#D97706',
+                            emerald: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom animations & interactive styles */
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+        .pulse-slow {
+            animation: pulse 3s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .selected-item {
+            ring: 4px;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+                        Respect & Inclusion Quest
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Mastering Modal Verbs through Anti-Bullying & DEI</p>
+                </div>
+            </div>
+            <div id="gameStatsHeader" class="hidden flex items-center gap-4 sm:gap-6 text-sm font-semibold">
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-amber-400"></i>
+                    <span id="timerDisplay" class="text-amber-300 font-mono">00:00</span>
+                </div>
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-yellow-400"></i>
+                    <span id="scoreDisplay" class="text-yellow-300 font-mono">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+        
+        <!-- START SCREEN / PLAYER NAME ENTRY -->
+        <div id="startScreen" class="max-w-xl w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 card-shadow relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl"></div>
+
+            <div class="text-center mb-6 relative">
+                <span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/30 mb-3">
+                    Educational Grammar & Ethics Challenge
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Welcome, Champion!</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Learn how modal verbs (<span class="text-purple-300 font-semibold">should, must, mustn't, ought to, don't have to, can't, allow</span>) express rules, rights, and respect in inclusive communities.
+                </p>
+            </div>
+
+            <form id="startForm" onsubmit="startGame(event)" class="space-y-4">
+                <div>
+                    <label for="playerName" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Enter Your Champion Name</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-astronaut absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="playerName" required placeholder="e.g. Alex Morgan" 
+                            class="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-700/60 text-xs text-slate-300 space-y-2">
+                    <p class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-pink-400"></i> How to Play:
+                    </p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400">
+                        <li>Match statements on the left with the correct modal verb on the right.</li>
+                        <li>Earn bonus points for speed and accuracy streaks!</li>
+                        <li>Read the instant educational feedback to learn key DEI principles.</li>
+                        <li>Complete all 3 rounds to receive your official Inclusion Certificate!</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 transform hover:-translate-y-0.5 transition active:translate-y-0 flex items-center justify-center gap-2 text-base">
+                    <span>Begin Journey</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- GAMEPLAY SCREEN -->
+        <div id="gameScreen" class="hidden max-w-5xl w-full flex flex-col gap-6">
+            
+            <!-- Round Bar & Instructions -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+                <div class="flex items-center gap-3">
+                    <span id="roundBadge" class="px-3 py-1 rounded-lg bg-purple-900/60 text-purple-300 font-extrabold text-sm border border-purple-500/40">
+                        Round 1 / 3
+                    </span>
+                    <div>
+                        <h2 id="roundTitle" class="text-lg font-bold text-white">School & Anti-Bullying</h2>
+                        <p id="roundDescription" class="text-xs text-slate-400">Select a scenario sentence on the left, then click its corresponding modal verb on the right.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 font-semibold uppercase">Streak:</span>
+                    <div id="streakContainer" class="flex gap-1 text-amber-400">
+                        <!-- Dynamic streak stars -->
+                        <i class="fa-solid fa-fire text-slate-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matching Grid Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                
+                <!-- Left Column: Sentences / Situations -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2 px-1">
+                        <i class="fa-solid fa-comment-dots"></i> Scenarios & Statements
+                    </h3>
+                    <div id="sentencesList" class="space-y-3">
+                        <!-- Sentence Items Generated JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Modal Verbs -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-pink-400 flex items-center gap-2 px-1">
+                        <i class="fa-solid fa-key"></i> Modal Verbs & Expressive Words
+                    </h3>
+                    <div id="modalsList" class="grid grid-cols-2 gap-3">
+                        <!-- Modal Verb Buttons Generated JS -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CERTIFICATE / SUMMARY SCREEN -->
+        <div id="summaryScreen" class="hidden max-w-2xl w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-10 card-shadow relative overflow-hidden text-center">
+            <div class="absolute -top-16 -right-16 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+            <div class="inline-flex p-4 bg-gradient-to-tr from-amber-500/20 to-yellow-500/20 rounded-full border border-amber-500/30 text-amber-400 mb-4">
+                <i class="fa-solid fa-award text-4xl"></i>
+            </div>
+
+            <p class="text-xs font-bold uppercase tracking-widest text-amber-400">Official Certificate of Completion</p>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1 mb-2">Inclusion Champion</h2>
+            <p class="text-slate-300 text-sm max-w-md mx-auto mb-6">
+                This certificate recognizes that <span id="certPlayerName" class="font-extrabold text-purple-300 underline">Player</span> has successfully demonstrated mastery of Modal Verbs and principles of Diversity, Equity, Respect, & Anti-Bullying!
+            </p>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/80 p-4 rounded-xl border border-slate-700 mb-6 text-left sm:text-center">
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Total Score</span>
+                    <span id="finalScore" class="text-xl sm:text-2xl font-black text-yellow-400">0</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Time Elapsed</span>
+                    <span id="finalTime" class="text-xl sm:text-2xl font-black text-amber-300">00:00</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase font-semibold">Accuracy</span>
+                    <span id="finalAccuracy" class="text-xl sm:text-2xl font-black text-emerald-400">100%</span>
+                </div>
+            </div>
+
+            <!-- Earned Badges -->
+            <div class="mb-8">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Badges & Achievements Earned</h4>
+                <div id="badgesContainer" class="flex flex-wrap justify-center gap-3">
+                    <!-- Badges injected via JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="restartGame()" class="py-3 px-6 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Play Again
+                </button>
+                <button onclick="printCertificate()" class="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Certificate
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- EDUCATIONAL FEEDBACK MODAL -->
+    <div id="feedbackModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div id="feedbackCard" class="max-w-md w-full bg-slate-800 border rounded-2xl p-6 shadow-2xl transform transition-all scale-95 opacity-0">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="feedbackIconContainer" class="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold">
+                    <!-- Icon JS -->
+                </div>
+                <div>
+                    <h3 id="feedbackTitle" class="text-lg font-extrabold text-white">Correct Match!</h3>
+                    <p id="feedbackSubtitle" class="text-xs text-slate-400">Grammar & Ethics Rule</p>
+                </div>
+            </div>
+
+            <div id="feedbackContent" class="space-y-3 my-4 text-sm text-slate-300 bg-slate-900/60 p-4 rounded-xl border border-slate-700/80">
+                <!-- Content injected via JS -->
+            </div>
+
+            <button onclick="closeFeedbackModal()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition">
+                Continue Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 text-center py-4 text-xs text-slate-500">
+        <p>Educational Game for Language Learning (ESL/EFL) & DEI Awareness • Respect, Equity & Inclusion</p>
+    </footer>
+
+    <script>
+        /* ===================================================================
+           GAME DATA & LEVEL CONFIGURATION
+           =================================================================== */
+        const gameRounds = [
+            {
+                title: "Round 1: School & Anti-Bullying",
+                description: "Recognize classroom respect, standing up against harassment, and empathy.",
+                items: [
+                    {
+                        id: "r1_1",
+                        sentence: "We ___ respect everyone's pronouns and identity in our school community.",
+                        modal: "must",
+                        explanation: "<b>'Must'</b> expresses a mandatory obligation and core rule for maintaining a safe and respectful school climate.",
+                        deiTip: "Respecting pronouns validates individuals' self-identity and fosters psychological safety."
+                    },
+                    {
+                        id: "r1_2",
+                        sentence: "You ___ stay silent when you witness bullying; speak up or report it safely!",
+                        modal: "mustn't",
+                        explanation: "<b>'Mustn't'</b> denotes prohibition. Remaining silent allows bullying behaviors to persist unchecked.",
+                        deiTip: "Upstanders actively intervene or seek help to protect targets of harassment."
+                    },
+                    {
+                        id: "r1_3",
+                        sentence: "We ___ stand up for classmates who are left out or marginalized.",
+                        modal: "ought to",
+                        explanation: "<b>'Ought to'</b> indicates a strong moral obligation or recommended duty to show compassion.",
+                        deiTip: "Inclusive actions build a culture where no student feels isolated."
+                    },
+                    {
+                        id: "r1_4",
+                        sentence: "Harassment or discrimination ___ be tolerated in any educational space.",
+                        modal: "can't",
+                        explanation: "<b>'Can't'</b> shows an absolute rule or impossibility regarding harmful conduct.",
+                        deiTip: "Zero-tolerance policies protect vulnerable groups from physical and emotional harm."
+                    }
+                ]
+            },
+            {
+                title: "Round 2: Diversity & Inclusion",
+                description: "Learn about valuing different perspectives, cultures, and unique capabilities.",
+                items: [
+                    {
+                        id: "r2_1",
+                        sentence: "You ___ force everyone to hold the exact same opinions, but you need to listen respectfully.",
+                        modal: "don't have to",
+                        explanation: "<b>'Don't have to'</b> means there is no requirement to agree on everything, but civility remains key.",
+                        deiTip: "Diversity of thought encourages critical thinking while respecting fundamental human rights."
+                    },
+                    {
+                        id: "r2_2",
+                        sentence: "Diverse perspectives ___ teams to innovate and solve problems more effectively.",
+                        modal: "allow",
+                        explanation: "<b>'Allow'</b> indicates granting permission or enabling positive opportunities.",
+                        deiTip: "Varied background experiences enhance group decision-making and creative solutions."
+                    },
+                    {
+                        id: "r2_3",
+                        sentence: "We ___ celebrate cultural traditions and learn from one another's experiences.",
+                        modal: "should",
+                        explanation: "<b>'Should'</b> offers positive advice for building empathetic, global community awareness.",
+                        deiTip: "Cultural celebration builds solidarity and reduces xenophobic stereotypes."
+                    },
+                    {
+                        id: "r2_4",
+                        sentence: "Bullying or excluding people based on background ___ happen in our team.",
+                        modal: "mustn't",
+                        explanation: "<b>'Mustn't'</b> emphasizes a strict prohibition against bias and exclusion.",
+                        deiTip: "Equitable groups actively safeguard equal access and participation for all."
+                    }
+                ]
+            },
+            {
+                title: "Round 3: Digital Citizenship & Equity",
+                description: "Online etiquette, accessibility standards, and fairness in society.",
+                items: [
+                    {
+                        id: "r3_1",
+                        sentence: "Accessible spaces and materials ___ everyone to participate fully and equal.",
+                        modal: "allow",
+                        explanation: "<b>'Allow'</b> signifies creating conditions that permit equal access for disabled individuals.",
+                        deiTip: "Accessibility is a fundamental equity principle, not an extra favor."
+                    },
+                    {
+                        id: "r3_2",
+                        sentence: "You ___ double-check information before sharing comments online to avoid cyberbullying.",
+                        modal: "ought to",
+                        explanation: "<b>'Ought to'</b> highlights responsible digital ethics and thoughtful conduct.",
+                        deiTip: "Verifying facts prevents spread of malicious rumors and harmful online harassment."
+                    },
+                    {
+                        id: "r3_3",
+                        sentence: "Online harassment ___ be excused as 'just a joke'.",
+                        modal: "can't",
+                        explanation: "<b>'Can't'</b> expresses impossibility/unacceptability. Harmful intent or impact cannot be minimized.",
+                        deiTip: "Cyberbullying causes real psychological distress regardless of the platform used."
+                    },
+                    {
+                        id: "r3_4",
+                        sentence: "We ___ ensure equal opportunities for underrepresented voices.",
+                        modal: "must",
+                        explanation: "<b>'Must'</b> underlines essential commitment toward social equity.",
+                        deiTip: "Equity involves providing specific support so everyone reaches the same starting line."
+                    }
+                ]
+            }
+        ];
+
+        /* ===================================================================
+           STATE VARIABLES
+           =================================================================== */
+        let playerName = "";
+        let currentRoundIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let totalAttempts = 0;
+        let correctAttempts = 0;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+
+        let selectedSentenceId = null;
+        let selectedModalValue = null;
+
+        /* ===================================================================
+           SOUND SYNTHESIS (Web Audio API)
+           =================================================================== */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.1);
+                    osc.frequency.setValueAtTime(659.25, now + 0.2);
+                    osc.frequency.setValueAtTime(880, now + 0.3);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        /* ===================================================================
+           GAME CONTROL FUNCTIONS
+           =================================================================== */
+        function startGame(e) {
+            e.preventDefault();
+            initAudio();
+
+            const nameInput = document.getElementById('playerName').value.trim();
+            playerName = nameInput || "Champion";
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.remove('hidden');
+
+            // Reset Stats
+            score = 0;
+            streak = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            secondsElapsed = 0;
+            currentRoundIndex = 0;
+
+            updateScoreDisplay();
+            startTimer();
+            loadRound(currentRoundIndex);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('scoreDisplay').innerText = score;
+            
+            // Streak stars
+            const streakContainer = document.getElementById('streakContainer');
+            streakContainer.innerHTML = '';
+            if (streak === 0) {
+                streakContainer.innerHTML = '<i class="fa-solid fa-fire text-slate-600" title="Build a streak!"></i>';
+            } else {
+                for (let i = 0; i < Math.min(streak, 5); i++) {
+                    streakContainer.innerHTML += '<i class="fa-solid fa-fire text-amber-400 animate-bounce"></i>';
+                }
+            }
+        }
+
+        /* ===================================================================
+           ROUND & MATCHING LOGIC
+           =================================================================== */
+        function loadRound(index) {
+            const roundData = gameRounds[index];
+            selectedSentenceId = null;
+            selectedModalValue = null;
+
+            // Update Headers
+            document.getElementById('roundBadge').innerText = `Round ${index + 1} / ${gameRounds.length}`;
+            document.getElementById('roundTitle').innerText = roundData.title;
+            document.getElementById('roundDescription').innerText = roundData.description;
+
+            // Render Sentences (Left)
+            const sentencesList = document.getElementById('sentencesList');
+            sentencesList.innerHTML = '';
+
+            // Shuffle copy of items for randomized layout
+            const itemsCopy = [...roundData.items].sort(() => Math.random() - 0.5);
+
+            itemsCopy.forEach(item => {
+                const btn = document.createElement('button');
+                btn.id = `sent-${item.id}`;
+                btn.className = `w-full text-left p-4 rounded-xl bg-slate-800 border-2 border-slate-700 hover:border-purple-500/50 transition cursor-pointer flex items-center justify-between gap-3 text-sm text-slate-200 card-shadow`;
+                btn.onclick = () => selectSentence(item.id);
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            ?
+                        </span>
+                        <span id="text-${item.id}">${item.sentence}</span>
+                    </div>
+                    <i class="fa-solid fa-circle-chevron-right text-slate-600"></i>
+                `;
+                sentencesList.appendChild(btn);
+            });
+
+            // Render Modals (Right) - Extract unique modals for this round
+            const modalsList = document.getElementById('modalsList');
+            modalsList.innerHTML = '';
+
+            // Create list of unique modals for current round plus distraction modals
+            let modalPool = Array.from(new Set(roundData.items.map(i => i.modal)));
+            const allPossibleModals = ["should", "must", "mustn't", "ought to", "don't have to", "can't", "allow"];
+            
+            // Fill with distractor if necessary to make 4 options
+            allPossibleModals.forEach(m => {
+                if (modalPool.length < 4 && !modalPool.includes(m)) {
+                    modalPool.push(m);
+                }
+            });
+
+            // Shuffle modals
+            modalPool.sort(() => Math.random() - 0.5);
+
+            modalPool.forEach(modalText => {
+                const btn = document.createElement('button');
+                btn.id = `modal-${modalText}`;
+                btn.className = `p-4 rounded-xl bg-slate-800 border-2 border-slate-700 hover:border-pink-500/50 transition font-bold text-slate-200 text-center text-sm cursor-pointer card-shadow flex flex-col items-center justify-center gap-1`;
+                btn.onclick = () => selectModal(modalText);
+                btn.innerHTML = `
+                    <span class="text-xs uppercase tracking-wider text-pink-400">Modal</span>
+                    <span class="text-base text-white">${modalText}</span>
+                `;
+                modalsList.appendChild(btn);
+            });
+        }
+
+        function selectSentence(id) {
+            playSound('click');
+            // Deselect previous sentence visual
+            if (selectedSentenceId) {
+                const prev = document.getElementById(`sent-${selectedSentenceId}`);
+                if (prev) prev.classList.remove('border-purple-500', 'bg-purple-950/40', 'ring-2', 'ring-purple-500/50');
+            }
+
+            selectedSentenceId = id;
+            const currentBtn = document.getElementById(`sent-${id}`);
+            currentBtn.classList.add('border-purple-500', 'bg-purple-950/40', 'ring-2', 'ring-purple-500/50');
+
+            checkMatch();
+        }
+
+        function selectModal(modalText) {
+            playSound('click');
+            // Deselect previous modal visual
+            if (selectedModalValue) {
+                const prev = document.getElementById(`modal-${selectedModalValue}`);
+                if (prev) prev.classList.remove('border-pink-500', 'bg-pink-950/40', 'ring-2', 'ring-pink-500/50');
+            }
+
+            selectedModalValue = modalText;
+            const currentBtn = document.getElementById(`modal-${modalText}`);
+            currentBtn.classList.add('border-pink-500', 'bg-pink-950/40', 'ring-2', 'ring-pink-500/50');
+
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (!selectedSentenceId || !selectedModalValue) return;
+
+            totalAttempts++;
+            const currentRound = gameRounds[currentRoundIndex];
+            const sentenceObj = currentRound.items.find(i => i.id === selectedSentenceId);
+
+            const isCorrect = (sentenceObj.modal === selectedModalValue);
+
+            if (isCorrect) {
+                playSound('success');
+                correctAttempts++;
+                streak++;
+                
+                // Calculate Points (Base 100 + Streak bonus)
+                const bonus = (streak > 1) ? (streak * 20) : 0;
+                score += (100 + bonus);
+                updateScoreDisplay();
+
+                // Replace blank in sentence text with modal
+                const textElem = document.getElementById(`text-${sentenceObj.id}`);
+                textElem.innerHTML = sentenceObj.sentence.replace('___', `<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-extrabold rounded border border-emerald-500/40">${selectedModalValue}</span>`);
+
+                // Mark sentence item disabled & completed
+                const sentBtn = document.getElementById(`sent-${sentenceObj.id}`);
+                sentBtn.onclick = null;
+                sentBtn.className = "w-full text-left p-4 rounded-xl bg-emerald-950/30 border-2 border-emerald-500/60 transition cursor-default flex items-center justify-between gap-3 text-sm text-slate-200";
+                sentBtn.querySelector('span').className = "w-6 h-6 rounded-full bg-emerald-500 text-slate-950 font-extrabold text-xs flex items-center justify-center flex-shrink-0";
+                sentBtn.querySelector('span').innerText = "✓";
+
+                // Show Educational Feedback Modal
+                showFeedback(true, sentenceObj);
+
+                // Reset Selection variables
+                resetSelections();
+
+            } else {
+                playSound('error');
+                streak = 0; // Reset streak
+                updateScoreDisplay();
+
+                // Show Incorrect Feedback Modal
+                showFeedback(false, sentenceObj);
+
+                // Reset selection highlights
+                resetSelections();
+            }
+        }
+
+        function resetSelections() {
+            if (selectedSentenceId) {
+                const s = document.getElementById(`sent-${selectedSentenceId}`);
+                if (s && s.onclick !== null) s.classList.remove('border-purple-500', 'bg-purple-950/40', 'ring-2', 'ring-purple-500/50');
+            }
+            if (selectedModalValue) {
+                const m = document.getElementById(`modal-${selectedModalValue}`);
+                if (m) m.classList.remove('border-pink-500', 'bg-pink-950/40', 'ring-2', 'ring-pink-500/50');
+            }
+            selectedSentenceId = null;
+            selectedModalValue = null;
+        }
+
+        /* ===================================================================
+           FEEDBACK MODAL & PROGRESSION
+           =================================================================== */
+        function showFeedback(isCorrect, item) {
+            const modal = document.getElementById('feedbackModal');
+            const card = document.getElementById('feedbackCard');
+            const iconContainer = document.getElementById('feedbackIconContainer');
+            const title = document.getElementById('feedbackTitle');
+            const subtitle = document.getElementById('feedbackSubtitle');
+            const content = document.getElementById('feedbackContent');
+
+            if (isCorrect) {
+                card.className = "max-w-md w-full bg-slate-800 border-2 border-emerald-500/50 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 opacity-100";
+                iconContainer.className = "w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold border border-emerald-500/30";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                title.innerText = "Correct Match!";
+                title.className = "text-lg font-extrabold text-emerald-400";
+                subtitle.innerText = "Grammar & Ethics Insight";
+
+                content.innerHTML = `
+                    <p class="mb-2"><strong class="text-white">Grammar Rule:</strong> ${item.explanation}</p>
+                    <div class="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg text-xs text-purple-200">
+                        <strong class="text-purple-300 block mb-1"><i class="fa-solid fa-heart"></i> DEI Principle:</strong>
+                        ${item.deiTip}
+                    </div>
+                `;
+            } else {
+                card.className = "max-w-md w-full bg-slate-800 border-2 border-rose-500/50 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 opacity-100";
+                iconContainer.className = "w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl font-bold border border-rose-500/30";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title.innerText = "Not Quite Right";
+                title.className = "text-lg font-extrabold text-rose-400";
+                subtitle.innerText = "Try Another Pair!";
+
+                content.innerHTML = `
+                    <p class="text-slate-300 mb-2">That modal verb doesn't fit the sentence context cleanly. Consider whether the situation requires obligation, permission, or a strict prohibition!</p>
+                    <p class="text-xs text-amber-300 bg-amber-950/40 p-2.5 rounded border border-amber-500/30">
+                        <i class="fa-solid fa-lightbulb"></i> Hint: Re-read the sentence to determine if it is something required (must), forbidden (mustn't), or permitted (allow).
+                    </p>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+
+            // Check if current round is complete
+            const currentRound = gameRounds[currentRoundIndex];
+            const allMatched = currentRound.items.every(item => {
+                const btn = document.getElementById(`sent-${item.id}`);
+                return btn && btn.onclick === null;
+            });
+
+            if (allMatched) {
+                if (currentRoundIndex < gameRounds.length - 1) {
+                    currentRoundIndex++;
+                    loadRound(currentRoundIndex);
+                } else {
+                    finishGame();
+                }
+            }
+        }
+
+        /* ===================================================================
+           VICTORY & CERTIFICATE SUMMARY
+           =================================================================== */
+        function finishGame() {
+            stopTimer();
+            playSound('win');
+
+            // Launch Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('summaryScreen').classList.remove('hidden');
+
+            // Set Certificate Data
+            document.getElementById('certPlayerName').innerText = playerName;
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalTime').innerText = document.getElementById('timerDisplay').innerText;
+
+            const accuracyVal = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
+            document.getElementById('finalAccuracy').innerText = `${accuracyVal}%`;
+
+            // Generate Badges based on performance
+            const badgesContainer = document.getElementById('badgesContainer');
+            badgesContainer.innerHTML = '';
+
+            const badges = [
+                { title: "Inclusion Champion", icon: "fa-hands-holding-circle", color: "from-purple-500 to-indigo-500", condition: true },
+                { title: "Empathy Expert", icon: "fa-heart", color: "from-pink-500 to-rose-500", condition: accuracyVal >= 80 },
+                { title: "Grammar Master", icon: "fa-book-bookmark", color: "from-emerald-500 to-teal-500", condition: accuracyVal >= 90 },
+                { title: "Speedy Upstander", icon: "fa-bolt", color: "from-amber-500 to-yellow-500", condition: secondsElapsed < 120 }
+            ];
+
+            badges.forEach(b => {
+                if (b.condition) {
+                    const badgeElem = document.createElement('div');
+                    badgeElem.className = `flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${b.color} text-white font-bold text-xs shadow-md`;
+                    badgeElem.innerHTML = `<i class="fa-solid ${b.icon}"></i> <span>${b.title}</span>`;
+                    badgesContainer.appendChild(badgeElem);
+                }
+            });
+        }
+
+        function restartGame() {
+            document.getElementById('summaryScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('gameStatsHeader').classList.add('hidden');
+        }
+
+        function printCertificate() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

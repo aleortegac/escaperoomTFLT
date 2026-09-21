@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super DEI World: Modals, Bullying & Equity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-blue: #5c94fc;
+            --brick-red: #d84000;
+            --coin-gold: #f8d800;
+            --dark-panel: #0f172a;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #020617;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hud {
+            width: 800px;
+            background: #000;
+            border: 3px solid var(--coin-gold);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: #fff;
+        }
+
+        .hud-val { color: var(--coin-gold); }
+
+        #game-canvas {
+            background: var(--sky-blue);
+            border: 3px solid var(--coin-gold);
+            border-radius: 0 0 8px 8px;
+            display: block;
+        }
+
+        /* Modal de Preguntas */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--dark-panel);
+            border: 3px solid var(--coin-gold);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(248, 216, 0, 0.3);
+        }
+
+        .modal-header {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--coin-gold);
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            background: #1e293b;
+            border: 2px solid #334155;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .opt-btn:hover {
+            border-color: var(--coin-gold);
+            background: #334155;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .btn-next {
+            margin-top: 15px;
+            font-family: 'Press Start 2P', cursive;
+            background: var(--brick-red);
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 10px 15px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HUD SUPERIOR -->
+    <div class="hud">
+        <div>HERO: <span class="hud-val" id="player-display">HERO</span></div>
+        <div>SCORE: <span class="hud-val" id="score-display">000000</span></div>
+        <div>EQUITY CARDS: <span class="hud-val" id="cards-display">0/4</span></div>
+    </div>
+
+    <!-- CANVAS DEL JUEGO -->
+    <canvas id="game-canvas" width="800" height="400"></canvas>
+
+    <div class="controls-hint">
+        Usa <strong>[←] [→]</strong> o <strong>[A] [D]</strong> para moverte | <strong>[ESPACIO]</strong>, <strong>[↑]</strong> o <strong>[W]</strong> para saltar.
+    </div>
+
+    <!-- MODAL DE PREGUNTAS (DEI & MODALS) -->
+    <div class="modal-overlay" id="quiz-modal">
+        <div class="modal-card">
+            <div class="modal-header">❓ DEPOSITORY OF DEI & MODALS</div>
+            <div class="question-text" id="question-text">---</div>
+            <div class="options-grid" id="options-container"></div>
+            <div class="feedback" id="feedback-box"></div>
+            <button class="btn-next" id="btn-continue" onclick="closeModal()">CONTINUE RUNNING ▶</button>
+        </div>
+    </div>
+
+    <script>
+        // BANCO DE PREGUNTAS: BULLYING, EQUITY Y VERBOS MODALES
+        const questions = [
+            {
+                q: "1. Cyberbullying and physical harassment: Students ______ bully others under any circumstances.",
+                options: ["mustn't", "don't have to", "can"],
+                correct: 0,
+                exp: "<strong>MUSTN'T:</strong> Denota una prohibición absoluta en las normas de convivencia escolares y digitales."
+            },
+            {
+                q: "2. Understanding Equity: Equity means we ______ provide customized support to ensure equal outcomes for all.",
+                options: ["shouldn't", "should", "mustn't"],
+                correct: 1,
+                exp: "<strong>SHOULD:</strong> La equidad busca ofrecer las herramientas específicas que cada persona necesita."
+            },
+            {
+                q: "3. Reporting Bullying: If you witness someone being excluded, you ______ report it to a trusted adult.",
+                options: ["ought to", "mustn't", "can't"],
+                correct: 0,
+                exp: "<strong>OUGHT TO / SHOULD:</strong> Expresa un deber ético y responsabilidad comunitaria."
+            },
+            {
+                q: "4. Inclusive Spaces: School policies ______ allow every student to express their true identity safely.",
+                options: ["must", "mustn't", "shouldn't"],
+                correct: 0,
+                exp: "<strong>MUST:</strong> Refleja la obligación legal e institucional de garantizar entornos seguros e inclusivos."
+            }
+        ];
+
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameState = {
+            score: 0,
+            collectedCards: 0,
+            cameraX: 0,
+            gameActive: true,
+            currentQIndex: 0
+        };
+
+        let keys = { left: false, right: false, jump: false };
+
+        let player = {
+            x: 50, y: 280, w: 30, h: 40,
+            vx: 0, vy: 0,
+            speed: 4, jumpPower: -11,
+            grounded: false
+        };
+
+        // ELEMENTOS DEL MAPA
+        const platforms = [
+            { x: 0, y: 340, w: 2200, h: 60, type: 'ground' },
+            { x: 250, y: 250, w: 120, h: 20, type: 'brick' },
+            { x: 500, y: 200, w: 140, h: 20, type: 'brick' },
+            { x: 800, y: 220, w: 150, h: 20, type: 'brick' },
+            { x: 1150, y: 180, w: 140, h: 20, type: 'brick' }
+        ];
+
+        // Bloques de Preguntas (?)
+        const blocks = [
+            { x: 300, y: 150, w: 32, h: 32, active: true, qIdx: 0 },
+            { x: 550, y: 100, w: 32, h: 32, active: true, qIdx: 1 },
+            { x: 850, y: 120, w: 32, h: 32, active: true, qIdx: 2 },
+            { x: 1200, y: 80, w: 32, h: 32, active: true, qIdx: 3 }
+        ];
+
+        // Meta final (Meta de Equidad)
+        const finishLine = { x: 1500, y: 100, w: 10, h: 240 };
+
+        // CONTROLES
+        window.addEventListener('keydown', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if ((e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') && player.grounded) {
+                keys.jump = true;
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') keys.jump = false;
+        });
+
+        // BUCLE PRINCIPAL
+        function gameLoop() {
+            if (gameState.gameActive) {
+                updatePhysics();
+                render();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updatePhysics() {
+            // Movimiento Horizontal
+            if (keys.left) player.vx = -player.speed;
+            else if (keys.right) player.vx = player.speed;
+            else player.vx = 0;
+
+            // Salto
+            if (keys.jump && player.grounded) {
+                player.vy = player.jumpPower;
+                player.grounded = false;
+                keys.jump = false;
+            }
+
+            // Gravedad
+            player.vy += 0.5;
+
+            player.x += player.vx;
+            player.y += player.vy;
+
+            if (player.x < 0) player.x = 0;
+
+            // Ajuste de Cámara
+            if (player.x - gameState.cameraX > 400) {
+                gameState.cameraX = player.x - 400;
+            }
+
+            // Colisiones con Plataformas
+            player.grounded = false;
+            platforms.forEach(p => {
+                if (player.x < p.x + p.w && player.x + player.w > p.x &&
+                    player.y + player.h >= p.y && player.y + player.h <= p.y + p.h + player.vy) {
+                    player.y = p.y - player.h;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            });
+
+            // Colisión con Bloques de Preguntas (?) desde abajo
+            blocks.forEach(b => {
+                if (b.active && player.x < b.x + b.w && player.x + player.w > b.x &&
+                    player.y <= b.y + b.h && player.y >= b.y + b.h - 10 && player.vy < 0) {
+                    
+                    player.vy = 3; // Rebote hacia abajo
+                    b.active = false;
+                    openQuiz(b.qIdx);
+                }
+            });
+
+            // LLegada a la Meta
+            if (player.x >= finishLine.x) {
+                gameState.gameActive = false;
+                alert(`🎉 ¡FELICIDADES! Has completado el recorrido de la Inclusión y la Equidad.\nPuntaje Final: ${gameState.score}`);
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(-gameState.cameraX, 0);
+
+            // Dibujar Plataformas
+            platforms.forEach(p => {
+                ctx.fillStyle = p.type === 'ground' ? '#22c55e' : '#d84000';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+            });
+
+            // Dibujar Bloques (?)
+            blocks.forEach(b => {
+                ctx.fillStyle = b.active ? '#f8d800' : '#64748b';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.strokeStyle = '#000';
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                ctx.fillStyle = '#000';
+                ctx.font = "bold 14px 'Press Start 2P'";
+                ctx.fillText(b.active ? "?" : "✓", b.x + 8, b.y + 22);
+            });
+
+            // Dibujar Meta / Poste
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(finishLine.x, finishLine.y, finishLine.w, finishLine.h);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(finishLine.x + 10, finishLine.y, 40, 30);
+
+            // Dibujar Jugador
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+
+            ctx.restore();
+        }
+
+        // LÓGICA DEL PREGUNTAS (QUIZ)
+        function openQuiz(index) {
+            gameState.gameActive = false;
+            gameState.currentQIndex = index;
+            const q = questions[index];
+
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('feedback-box').style.display = 'none';
+            document.getElementById('btn-continue').style.display = 'none';
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerHTML = `<strong>${String.fromCharCode(65 + i)}.</strong> ${opt}`;
+                btn.onclick = () => selectOption(i);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('quiz-modal').classList.add('active');
+        }
+
+        function selectOption(selectedIndex) {
+            const q = questions[gameState.currentQIndex];
+            const fb = document.getElementById('feedback-box');
+            fb.style.display = 'block';
+
+            if (selectedIndex === q.correct) {
+                gameState.score += 500;
+                gameState.collectedCards++;
+                fb.style.background = 'rgba(34, 197, 94, 0.2)';
+                fb.style.color = 'var(--accent-green)';
+                fb.innerHTML = `✅ <strong>CORRECT!</strong> (+500 pts)<br>${q.exp}`;
+            } else {
+                fb.style.background = 'rgba(239, 68, 68, 0.2)';
+                fb.style.color = 'var(--accent-red)';
+                fb.innerHTML = `❌ <strong>INCORRECT!</strong><br>${q.exp}`;
+            }
+
+            document.getElementById('score-display').innerText = String(gameState.score).padStart(6, '0');
+            document.getElementById('cards-display').innerText = `${gameState.collectedCards}/4`;
+
+            document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+            document.getElementById('btn-continue').style.display = 'inline-block';
+        }
+
+        function closeModal() {
+            document.getElementById('quiz-modal').classList.remove('active');
+            gameState.gameActive = true;
+        }
+
+        // Iniciar bucle
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
